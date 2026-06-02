@@ -826,7 +826,7 @@ function renderDBGrid(){
       +'<td><input class="cell-input" style="min-width:84px" value="'+esc(row.data_envio||'')+'" data-f="data_envio" data-id="'+esc(row.id)+'" onblur="updateRow(this)"></td>'
       +'<td><input class="cell-input" style="min-width:84px" value="'+esc(row.data_pag||'')+'" data-f="data_pag" data-id="'+esc(row.id)+'" onblur="updateRow(this)"></td>'
       +'<td><select class="cell-select" style="min-width:106px" data-f="tipo" data-id="'+esc(row.id)+'" onchange="updateRow(this)">'+tipoOpts+'</select></td>'
-      +'<td><div class="link-cell"><input class="cell-input" style="min-width:150px" value="'+esc(row.link||'')+'" data-f="link" data-id="'+esc(row.id)+'" onblur="updateRow(this)" title="'+esc(row.link||'')+'"><button class="copy-btn" onclick="copyLink(this)" title="Copiar link">📋</button></div></td>'
+      +'<td><div class="link-cell"><input class="cell-input" style="min-width:150px" value="'+esc(row.link||'')+'" data-f="link" data-id="'+esc(row.id)+'" onblur="checkDupLink(this);updateRow(this)" title="'+esc(row.link||'')+'"><button class="copy-btn" onclick="copyLink(this)" title="Copiar link">📋</button></div></td>'
       +'<td><select class="cell-select" style="min-width:64px" data-f="comprou" data-id="'+esc(row.id)+'" onchange="updateRow(this)"><option'+(compSim?' selected':'')+'>Sim</option><option'+(!compSim?' selected':'')+'>Não</option></select></td>'
       +'<td><input class="cell-input" style="min-width:86px" value="'+esc(row.notas||'')+'" data-f="notas" data-id="'+esc(row.id)+'" onblur="updateRow(this)" placeholder="Anotação..."></td>'
       +'<td><input class="cell-input" type="number" style="min-width:96px" value="'+fechVal+'" data-f="fechamento" data-id="'+esc(row.id)+'" onblur="updateRow(this)"></td>'
@@ -847,7 +847,7 @@ function renderDBGrid(){
       +'<td><input class="cell-input" style="min-width:84px" data-pid="'+row._pid+'" data-f="data_envio" onblur="updatePendingField(this)"></td>'
       +'<td><input class="cell-input" style="min-width:84px" data-pid="'+row._pid+'" data-f="data_pag" onblur="updatePendingField(this)"></td>'
       +'<td><select class="cell-select" style="min-width:106px" data-pid="'+row._pid+'" data-f="tipo" onchange="updatePendingField(this)">'+tipoOpts2+'</select></td>'
-      +'<td><div class="link-cell"><input class="cell-input" style="min-width:150px" data-pid="'+row._pid+'" data-f="link" onblur="updatePendingField(this)"><button class="copy-btn" onclick="copyLink(this)" title="Copiar link">📋</button></div></td>'
+      +'<td><div class="link-cell"><input class="cell-input" style="min-width:150px" data-pid="'+row._pid+'" data-f="link" onblur="checkDupLink(this);updatePendingField(this)"><button class="copy-btn" onclick="copyLink(this)" title="Copiar link">📋</button></div></td>'
       +'<td><select class="cell-select" style="min-width:64px" data-pid="'+row._pid+'" data-f="comprou" onchange="updatePendingField(this)"><option>Sim</option><option selected>Não</option></select></td>'
       +'<td><input class="cell-input" style="min-width:86px" data-pid="'+row._pid+'" data-f="notas" placeholder="Anotação..." onblur="updatePendingField(this)"></td>'
       +'<td><input class="cell-input" type="number" style="min-width:96px" value="0" data-pid="'+row._pid+'" data-f="fechamento" oninput="updatePendingField(this)" onblur="updatePendingField(this)"></td>'
@@ -1273,6 +1273,44 @@ function debugDates(tipo){
   }
   const parsed=datas.map(d=>d+' → '+(parseGestaoDate(d)?parseGestaoDate(d).toLocaleDateString('pt-BR'):'NÃO RECONHECIDO'));
   alert('Exemplos de datas de '+label+' no banco:\n\n'+parsed.join('\n')+'\n\nFormato detectado pelo sistema.');
+}
+
+// ── DUPLICATE LINK CHECK
+async function checkDupLink(el){
+  const link=(el.value||'').trim();
+  if(!link||!link.startsWith('http'))return;
+
+  // Check in allPassagens (already loaded) for current month
+  const mes=_dbMes;
+  const existing=allPassagens.filter(r=>
+    r.link===link &&
+    r.mes===mes &&
+    r.id!==el.dataset.id // ignore self when editing existing row
+  );
+
+  if(existing.length>0){
+    const info=existing.map(r=>{
+      const csLabel=r.cs.charAt(0).toUpperCase()+r.cs.slice(1);
+      const segLabel=r.seg.toUpperCase();
+      const de=r.data_envio||'sem data';
+      return csLabel+' · '+segLabel+' · '+de;
+    }).join(' | ');
+    showDupWarning('⚠️ Link já cadastrado em '+mes.charAt(0).toUpperCase()+mes.slice(1)+': '+info);
+  }
+}
+
+function showDupWarning(msg){
+  let el=document.getElementById('dupWarning');
+  if(!el){
+    el=document.createElement('div');
+    el.id='dupWarning';
+    el.style.cssText='position:fixed;top:64px;left:50%;transform:translateX(-50%);background:#2a2000;border:1px solid #F0A44A;color:#F0A44A;padding:12px 24px;border-radius:10px;font-size:13px;z-index:400;pointer-events:none;white-space:nowrap;max-width:90vw;text-align:center;line-height:1.5';
+    document.body.appendChild(el);
+  }
+  el.textContent=msg;
+  el.style.display='block';
+  clearTimeout(el._t);
+  el._t=setTimeout(()=>el.style.display='none',6000);
 }
 
 // ── COPY LINK
