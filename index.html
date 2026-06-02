@@ -221,6 +221,8 @@ footer{margin-top:40px;font-size:12px;color:var(--ink3);text-align:center;paddin
 .cell-select:focus{background:var(--surface3)}
 .cell-select option{background:#1E2438;color:var(--ink)}
 .row-check{width:14px;height:14px;cursor:pointer;accent-color:var(--renov)}
+.db-table tr.dup-link td{background:rgba(240,164,74,0.12)!important;border-left:3px solid #F0A44A;}
+.db-table tr.dup-link:hover td{background:rgba(240,164,74,0.2)!important;}
 .saving-indicator{font-size:10px;color:var(--upsell);padding:2px 8px}
 
 .origem-panel-wrap{flex:1;overflow-y:auto;padding:20px 24px}
@@ -1280,14 +1282,14 @@ async function checkDupLink(el){
   const link=(el.value||'').trim();
   if(!link||!link.startsWith('http'))return;
 
-  // Check in allPassagens (already loaded) for current month
   const mes=_dbMes;
   const existing=allPassagens.filter(r=>
     r.link===link &&
     r.mes===mes &&
-    r.id!==el.dataset.id // ignore self when editing existing row
+    r.id!==(el.dataset.id||'__none__')
   );
 
+  const tr=el.closest('tr');
   if(existing.length>0){
     const info=existing.map(r=>{
       const csLabel=r.cs.charAt(0).toUpperCase()+r.cs.slice(1);
@@ -1296,6 +1298,11 @@ async function checkDupLink(el){
       return csLabel+' · '+segLabel+' · '+de;
     }).join(' | ');
     showDupWarning('⚠️ Link já cadastrado em '+mes.charAt(0).toUpperCase()+mes.slice(1)+': '+info);
+    // Mark row yellow
+    if(tr) tr.classList.add('dup-link');
+  } else {
+    // Remove yellow if link was corrected
+    if(tr) tr.classList.remove('dup-link');
   }
 }
 
