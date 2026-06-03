@@ -390,6 +390,17 @@ footer{margin-top:40px;font-size:12px;color:var(--ink3);text-align:center;paddin
     <div class="hist-kpi"><div class="kpi-label">Ticket médio geral</div><div class="kpi-value" id="histTicket">—</div><div class="kpi-sub">por fechamento</div></div>
     <div class="hist-kpi"><div class="kpi-label">Taxa de fechamento</div><div class="kpi-value" id="histTaxa">—</div><div class="kpi-sub" id="histTaxaSub">—</div></div>
   </div>
+  <div style="display:grid;grid-template-columns:1fr 1fr;gap:20px;margin-bottom:20px">
+    <div class="card">
+      <div class="card-title">Distribuição do valor fechado — ano</div>
+      <div class="donut-wrap"><canvas id="chartHistDonut"></canvas><div class="donut-center"><strong id="histDonutCenter">—</strong><span>total</span></div></div>
+      <div class="legend" style="justify-content:center;margin-top:16px" id="histDonutLegend"></div>
+    </div>
+    <div class="card">
+      <div class="card-title">Fechamentos por tipo — ano</div>
+      <div class="chart-wrap" style="height:260px"><canvas id="chartHistFech"></canvas></div>
+    </div>
+  </div>
   <div class="card" style="margin-bottom:20px">
     <div class="card-title">Resultado por mês</div>
     <div class="hist-table-wrap">
@@ -406,17 +417,6 @@ footer{margin-top:40px;font-size:12px;color:var(--ink3);text-align:center;paddin
         <thead><tr><th>Tipo</th><th>Passagens</th><th>Fechamentos</th><th>Taxa</th><th>Valor faturado</th><th>Ticket médio</th></tr></thead>
         <tbody id="histTipoBody"></tbody>
       </table>
-    </div>
-  </div>
-  <div style="display:grid;grid-template-columns:1fr 1fr;gap:20px;margin-top:0">
-    <div class="card">
-      <div class="card-title">Distribuição do valor fechado — ano</div>
-      <div class="donut-wrap"><canvas id="chartHistDonut"></canvas><div class="donut-center"><strong id="histDonutCenter">—</strong><span>total</span></div></div>
-      <div class="legend" style="justify-content:center;margin-top:16px" id="histDonutLegend"></div>
-    </div>
-    <div class="card">
-      <div class="card-title">Fechamentos por tipo — ano</div>
-      <div class="chart-wrap" style="height:260px"><canvas id="chartHistFech"></canvas></div>
     </div>
   </div>
 </div>
@@ -480,6 +480,8 @@ footer{margin-top:40px;font-size:12px;color:var(--ink3);text-align:center;paddin
   </div>
   <div class="db-toolbar">
     <span class="db-toolbar-info" id="dbInfo">—</span>
+    <button class="btn-sm" id="btnFiltroFech" onclick="toggleFiltroFech()" style="border:1px solid var(--border2);background:transparent;color:var(--ink2)">⚡ Só fechados</button>
+    <button class="btn-sm" onclick="exportDbExcel()" style="border:1px solid var(--border2);background:transparent;color:var(--ink2)">📥 Excel</button>
     <button class="btn-sm btn-add" onclick="addRow()">+ Linha</button>
     <button class="btn-sm btn-del" onclick="deleteSelected()">✕ Remover</button>
     <button class="btn-sm btn-save-row" onclick="saveAllPending()">↑ Salvar tudo</button>
@@ -850,7 +852,8 @@ function renderDBGrid(){
   tbody.innerHTML='';
 
   // Existing rows from Supabase
-  const existingRows=allPassagens.filter(r=>r.mes===_dbMes&&r.cs===_dbCS&&r.seg===_dbSeg);
+  let existingRows=allPassagens.filter(r=>r.mes===_dbMes&&r.cs===_dbCS&&r.seg===_dbSeg);
+  if(_filtroFech) existingRows=existingRows.filter(r=>(r.comprou||'').toLowerCase()==='sim');
   existingRows.forEach((row)=>{
     const tr=document.createElement('tr');
     tr.dataset.id=row.id||'';
@@ -872,7 +875,8 @@ function renderDBGrid(){
   });
 
   // Pending (new) rows
-  pendingRows.forEach((row,pi)=>{
+  const pendingVisible=_filtroFech?pendingRows.filter(r=>r.mes===_dbMes&&r.cs===_dbCS&&r.seg===_dbSeg&&(r.comprou||'').toLowerCase()==='sim'):pendingRows;
+  pendingVisible.forEach((row,pi)=>{
     if(row.mes!==_dbMes||row.cs!==_dbCS||row.seg!==_dbSeg)return;
     const tr=document.createElement('tr');
     tr.classList.add('new-row');
@@ -922,6 +926,7 @@ function markDupRows(){
 
 // Uses unique _pid to identify pending rows without index confusion
 let _pidCounter=0;
+let _filtroFech=false;
 
 function updatePendingField(el){
   const pid=el.dataset.pid;
@@ -1355,6 +1360,54 @@ function debugDates(tipo){
   }
   const parsed=datas.map(d=>d+' → '+(parseGestaoDate(d)?parseGestaoDate(d).toLocaleDateString('pt-BR'):'NÃO RECONHECIDO'));
   alert('Exemplos de datas de '+label+' no banco:\n\n'+parsed.join('\n')+'\n\nFormato detectado pelo sistema.');
+}
+
+// ── FILTRO FECHADOS
+function toggleFiltroFech(){
+  _filtroFech=!_filtroFech;
+  const btn=document.getElementById('btnFiltroFech');
+  if(_filtroFech){
+    btn.style.background='var(--upsell)';
+    btn.style.color='#fff';
+    btn.style.borderColor='var(--upsell)';
+    btn.textContent='⚡ Só fechados ✓';
+  } else {
+    btn.style.background='transparent';
+    btn.style.color='var(--ink2)';
+    btn.style.borderColor='var(--border2)';
+    btn.textContent='⚡ Só fechados';
+  }
+  renderDBGrid();
+}
+
+// ── EXPORT DB EXCEL
+function exportDbExcel(){
+  // Get currently visible rows (mes + cs + seg filter)
+  let existingRows=allPassagens.filter(r=>r.mes===_dbMes&&r.cs===_dbCS&&r.seg===_dbSeg);
+  if(_filtroFech) existingRows=existingRows.filter(r=>(r.comprou||'').toLowerCase()==='sim');
+  const pendingFiltered=pendingRows.filter(r=>r.mes===_dbMes&&r.cs===_dbCS&&r.seg===_dbSeg);
+  let allVisible=[...existingRows,...pendingFiltered];
+  if(_filtroFech) allVisible=allVisible.filter(r=>(r.comprou||'').toLowerCase()==='sim');
+
+  if(!allVisible.length){showToast('Nenhuma linha para exportar');return;}
+
+  const csLabel=_dbCS.charAt(0).toUpperCase()+_dbCS.slice(1);
+  const segLabel=_dbSeg.toUpperCase();
+  const mesLabel=MESES_LABELS[_dbMes]||_dbMes;
+
+  const headers=['Origem','Data Envio','Data Pagto','Tipo','Link Empresa','Comprou','Fechamento (R$)','Vendedor','Anotações'];
+  const dataRows=allVisible.map(r=>[
+    r.orig||'',r.data_envio||'',r.data_pag||'',r.tipo||'',
+    r.link||'',r.comprou||'Não',Number(r.fechamento)||0,
+    r.vendedor||'',r.notas||''
+  ]);
+
+  const wb=XLSX.utils.book_new();
+  const ws=XLSX.utils.aoa_to_sheet([headers,...dataRows]);
+  ws['!cols']=[{wch:12},{wch:12},{wch:12},{wch:14},{wch:55},{wch:10},{wch:14},{wch:14},{wch:20}];
+  XLSX.utils.book_append_sheet(wb,ws,csLabel+' '+segLabel);
+  XLSX.writeFile(wb,'Resultados_'+mesLabel+'_'+csLabel+'_'+segLabel+'_'+new Date().toISOString().slice(0,10)+'.xlsx');
+  showToast('Excel exportado — '+allVisible.length+' linhas');
 }
 
 // ── DUPLICATE LINK CHECK
