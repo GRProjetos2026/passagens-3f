@@ -221,6 +221,8 @@ footer{margin-top:40px;font-size:12px;color:var(--ink3);text-align:center;paddin
 .cell-select:focus{background:var(--surface3)}
 .cell-select option{background:#1E2438;color:var(--ink)}
 .row-check{width:14px;height:14px;cursor:pointer;accent-color:var(--renov)}
+.excel-opt{padding:8px 14px;font-size:12px;color:var(--ink2);cursor:pointer;transition:background .15s;white-space:nowrap}
+.excel-opt:hover{background:var(--surface3);color:var(--ink)}
 .db-table tr.dup-link td{background:rgba(240,164,74,0.12)!important;border-left:3px solid #F0A44A;}
 .db-table tr.dup-link:hover td{background:rgba(240,164,74,0.2)!important;}
 .saving-indicator{font-size:10px;color:var(--upsell);padding:2px 8px}
@@ -481,7 +483,43 @@ footer{margin-top:40px;font-size:12px;color:var(--ink3);text-align:center;paddin
   <div class="db-toolbar">
     <span class="db-toolbar-info" id="dbInfo">—</span>
     <button class="btn-sm" id="btnFiltroFech" onclick="toggleFiltroFech()" style="border:1px solid var(--border2);background:transparent;color:var(--ink2)">⚡ Só fechados</button>
-    <button class="btn-sm" onclick="exportDbExcel()" style="border:1px solid var(--border2);background:transparent;color:var(--ink2)">📥 Excel</button>
+    <div style="position:relative;display:inline-block" id="excelMenuWrap">
+      <button class="btn-sm" onclick="toggleExcelMenu()" style="border:1px solid var(--border2);background:transparent;color:var(--ink2)">📥 Excel ▾</button>
+      <div id="excelMenu" style="display:none;position:absolute;top:100%;left:0;margin-top:4px;background:#1E2438;border:1px solid var(--border2);border-radius:8px;z-index:200;min-width:280px;padding:6px 0;box-shadow:0 8px 24px rgba(0,0,0,.4);max-height:420px;overflow-y:auto">
+        <div style="font-size:10px;text-transform:uppercase;letter-spacing:.07em;color:var(--ink3);padding:6px 14px 4px">Todos os CS</div>
+        <div class="excel-opt" onclick="exportDbExcel('all','all',false)">📋 Todos os links (B2B + GOV)</div>
+        <div class="excel-opt" onclick="exportDbExcel('all','all',true)">✅ Somente fechados (B2B + GOV)</div>
+        <div class="excel-opt" onclick="exportDbExcel('all','b2b',false)">📋 Somente B2B — todos</div>
+        <div class="excel-opt" onclick="exportDbExcel('all','b2b',true)">✅ Somente B2B — fechados</div>
+        <div class="excel-opt" onclick="exportDbExcel('all','gov',false)">📋 Somente GOV — todos</div>
+        <div class="excel-opt" onclick="exportDbExcel('all','gov',true)">✅ Somente GOV — fechados</div>
+        <div style="border-top:1px solid var(--border);margin:4px 0"></div>
+        <div style="font-size:10px;text-transform:uppercase;letter-spacing:.07em;color:var(--ink3);padding:6px 14px 4px">Por CS</div>
+        <div style="font-size:10px;text-transform:uppercase;letter-spacing:.07em;color:var(--ink3);padding:6px 14px 2px">Gabriel</div>
+        <div class="excel-opt" onclick="exportDbExcel('gabriel','all',false)">📋 B2B + GOV — todos</div>
+        <div class="excel-opt" onclick="exportDbExcel('gabriel','all',true)">✅ B2B + GOV — fechados</div>
+        <div class="excel-opt" onclick="exportDbExcel('gabriel','b2b',false)">📋 Só B2B — todos</div>
+        <div class="excel-opt" onclick="exportDbExcel('gabriel','b2b',true)">✅ Só B2B — fechados</div>
+        <div class="excel-opt" onclick="exportDbExcel('gabriel','gov',false)">📋 Só GOV — todos</div>
+        <div class="excel-opt" onclick="exportDbExcel('gabriel','gov',true)">✅ Só GOV — fechados</div>
+        <div style="border-top:1px solid var(--border);margin:4px 0"></div>
+        <div style="font-size:10px;text-transform:uppercase;letter-spacing:.07em;color:var(--ink3);padding:6px 14px 2px">Caio</div>
+        <div class="excel-opt" onclick="exportDbExcel('caio','all',false)">📋 B2B + GOV — todos</div>
+        <div class="excel-opt" onclick="exportDbExcel('caio','all',true)">✅ B2B + GOV — fechados</div>
+        <div class="excel-opt" onclick="exportDbExcel('caio','b2b',false)">📋 Só B2B — todos</div>
+        <div class="excel-opt" onclick="exportDbExcel('caio','b2b',true)">✅ Só B2B — fechados</div>
+        <div class="excel-opt" onclick="exportDbExcel('caio','gov',false)">📋 Só GOV — todos</div>
+        <div class="excel-opt" onclick="exportDbExcel('caio','gov',true)">✅ Só GOV — fechados</div>
+        <div style="border-top:1px solid var(--border);margin:4px 0"></div>
+        <div style="font-size:10px;text-transform:uppercase;letter-spacing:.07em;color:var(--ink3);padding:6px 14px 2px">Giovanni</div>
+        <div class="excel-opt" onclick="exportDbExcel('giovanni','all',false)">📋 B2B + GOV — todos</div>
+        <div class="excel-opt" onclick="exportDbExcel('giovanni','all',true)">✅ B2B + GOV — fechados</div>
+        <div class="excel-opt" onclick="exportDbExcel('giovanni','b2b',false)">📋 Só B2B — todos</div>
+        <div class="excel-opt" onclick="exportDbExcel('giovanni','b2b',true)">✅ Só B2B — fechados</div>
+        <div class="excel-opt" onclick="exportDbExcel('giovanni','gov',false)">📋 Só GOV — todos</div>
+        <div class="excel-opt" onclick="exportDbExcel('giovanni','gov',true)">✅ Só GOV — fechados</div>
+      </div>
+    </div>
     <button class="btn-sm btn-add" onclick="addRow()">+ Linha</button>
     <button class="btn-sm btn-del" onclick="deleteSelected()">✕ Remover</button>
     <button class="btn-sm btn-save-row" onclick="saveAllPending()">↑ Salvar tudo</button>
@@ -1380,34 +1418,54 @@ function toggleFiltroFech(){
   renderDBGrid();
 }
 
+// ── EXCEL MENU
+function toggleExcelMenu(){
+  const m=document.getElementById('excelMenu');
+  m.style.display=m.style.display==='none'?'block':'none';
+}
+document.addEventListener('click',function(e){
+  const wrap=document.getElementById('excelMenuWrap');
+  if(wrap&&!wrap.contains(e.target))document.getElementById('excelMenu').style.display='none';
+});
+
 // ── EXPORT DB EXCEL
-function exportDbExcel(){
-  // Get currently visible rows (mes + cs + seg filter)
-  let existingRows=allPassagens.filter(r=>r.mes===_dbMes&&r.cs===_dbCS&&r.seg===_dbSeg);
-  if(_filtroFech) existingRows=existingRows.filter(r=>(r.comprou||'').toLowerCase()==='sim');
-  const pendingFiltered=pendingRows.filter(r=>r.mes===_dbMes&&r.cs===_dbCS&&r.seg===_dbSeg);
-  let allVisible=[...existingRows,...pendingFiltered];
-  if(_filtroFech) allVisible=allVisible.filter(r=>(r.comprou||'').toLowerCase()==='sim');
-
-  if(!allVisible.length){showToast('Nenhuma linha para exportar');return;}
-
-  const csLabel=_dbCS.charAt(0).toUpperCase()+_dbCS.slice(1);
-  const segLabel=_dbSeg.toUpperCase();
+function exportDbExcel(csFilter,segFilter,somenteFeche){
+  csFilter=csFilter||'cur';
+  segFilter=segFilter||'cur';
+  somenteFeche=!!somenteFeche;
   const mesLabel=MESES_LABELS[_dbMes]||_dbMes;
-
-  const headers=['Origem','Data Envio','Data Pagto','Tipo','Link Empresa','Comprou','Fechamento (R$)','Vendedor','Anotações'];
-  const dataRows=allVisible.map(r=>[
+  let rows=allPassagens.filter(r=>r.mes===_dbMes);
+  if(csFilter==='cur') rows=rows.filter(r=>r.cs===_dbCS);
+  else if(csFilter!=='all') rows=rows.filter(r=>r.cs===csFilter);
+  if(segFilter==='cur') rows=rows.filter(r=>r.seg===_dbSeg);
+  else if(segFilter!=='all') rows=rows.filter(r=>r.seg===segFilter);
+  if(somenteFeche) rows=rows.filter(r=>(r.comprou||'').toLowerCase()==='sim');
+  let pend=pendingRows.filter(r=>r.mes===_dbMes);
+  if(csFilter==='cur') pend=pend.filter(r=>r.cs===_dbCS);
+  else if(csFilter!=='all') pend=pend.filter(r=>r.cs===csFilter);
+  if(segFilter==='cur') pend=pend.filter(r=>r.seg===_dbSeg);
+  else if(segFilter!=='all') pend=pend.filter(r=>r.seg===segFilter);
+  if(somenteFeche) pend=pend.filter(r=>(r.comprou||'').toLowerCase()==='sim');
+  const allRows=[...rows,...pend];
+  if(!allRows.length){showToast('Nenhuma linha para exportar');document.getElementById('excelMenu').style.display='none';return;}
+  const csLabel=csFilter==='all'?'Todos':(csFilter==='cur'?_dbCS:csFilter);
+  const segLabel=segFilter==='all'?'B2B+GOV':(segFilter==='cur'?_dbSeg:segFilter).toUpperCase();
+  const fechLabel=somenteFeche?'_Fechados':'';
+  const headers=['CS','Segmento','Origem','Data Envio','Data Pagto','Tipo','Link Empresa','Comprou','Fechamento (R$)','Vendedor','Anotações'];
+  const dataRows=allRows.map(r=>[
+    r.cs?r.cs.charAt(0).toUpperCase()+r.cs.slice(1):'',
+    (r.seg||'').toUpperCase(),
     r.orig||'',r.data_envio||'',r.data_pag||'',r.tipo||'',
     r.link||'',r.comprou||'Não',Number(r.fechamento)||0,
     r.vendedor||'',r.notas||''
   ]);
-
   const wb=XLSX.utils.book_new();
   const ws=XLSX.utils.aoa_to_sheet([headers,...dataRows]);
-  ws['!cols']=[{wch:12},{wch:12},{wch:12},{wch:14},{wch:55},{wch:10},{wch:14},{wch:14},{wch:20}];
-  XLSX.utils.book_append_sheet(wb,ws,csLabel+' '+segLabel);
-  XLSX.writeFile(wb,'Resultados_'+mesLabel+'_'+csLabel+'_'+segLabel+'_'+new Date().toISOString().slice(0,10)+'.xlsx');
-  showToast('Excel exportado — '+allVisible.length+' linhas');
+  ws['!cols']=[{wch:10},{wch:8},{wch:12},{wch:12},{wch:12},{wch:14},{wch:55},{wch:10},{wch:14},{wch:14},{wch:20}];
+  XLSX.utils.book_append_sheet(wb,ws,mesLabel);
+  XLSX.writeFile(wb,'Resultados_'+mesLabel+'_'+csLabel+'_'+segLabel+fechLabel+'_'+new Date().toISOString().slice(0,10)+'.xlsx');
+  showToast('Excel exportado — '+allRows.length+' linhas');
+  document.getElementById('excelMenu').style.display='none';
 }
 
 // ── DUPLICATE LINK CHECK
