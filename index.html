@@ -655,7 +655,19 @@ function showLogin(){
 
 // ── DADOS
 async function loadPassagens(){
-  const {data,error}=await sb.from('passagens').select('*').order('criado_em',{ascending:true});
+  // Load all records in batches of 1000 to bypass Supabase default limit
+  let allData=[];
+  let from=0;
+  const batchSize=1000;
+  while(true){
+    const {data,error}=await sb.from('passagens').select('*').order('criado_em',{ascending:true}).range(from,from+batchSize-1);
+    if(error){console.error(error);break;}
+    if(!data||data.length===0)break;
+    allData=[...allData,...data];
+    if(data.length<batchSize)break;
+    from+=batchSize;
+  }
+  const data=allData;
   if(error){console.error(error);return;}
   console.log('Raw fechamento sample:', data&&data[0]?data[0].fechamento:'no data', typeof(data&&data[0]?data[0].fechamento:''));
   allPassagens=(data||[]).map(function(r){
