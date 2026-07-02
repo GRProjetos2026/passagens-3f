@@ -668,7 +668,6 @@ async function loadPassagens(){
     from+=batchSize;
   }
   const data=allData;
-  if(error){console.error(error);return;}
   console.log('Raw fechamento sample:', data&&data[0]?data[0].fechamento:'no data', typeof(data&&data[0]?data[0].fechamento:''));
   allPassagens=(data||[]).map(function(r){
     r.fechamento=Number(r.fechamento)||0;
