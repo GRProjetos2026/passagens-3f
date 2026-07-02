@@ -1460,6 +1460,30 @@ function debugDates(tipo){
   alert('Exemplos de datas de '+label+' no banco:\n\n'+parsed.join('\n')+'\n\nFormato detectado pelo sistema.');
 }
 
+// ── UPDATE EXISTING ROW
+async function updateRow(el){
+  const id=el.dataset.id;if(!id)return;
+  const field=el.dataset.f;
+  const val=field==='fechamento'?(Number(el.value)||0):el.value;
+  // Update local immediately
+  const row=allPassagens.find(r=>r.id===id);
+  if(row){
+    row[field]=val;
+    // Warnings
+    if(field==='comprou'&&val==='Sim'&&(!row.data_pag||!row.data_pag.trim()))
+      showWarning('⚠️ Marcado como Sim mas sem Data de Pagamento!');
+    if(field==='fechamento'&&val>0&&(row.comprou||'').toLowerCase()==='sim'&&(!row.data_pag||!row.data_pag.trim()))
+      showWarning('⚠️ Fechamento preenchido sem Data de Pagamento!');
+    if(field==='comprou'&&val==='Sim'&&(row.fechamento||0)===0)
+      showWarning('⚠️ Marcado como Sim mas sem valor de Fechamento!');
+    renderDashboard();
+    buildMonthNav();
+  }
+  // Save to Supabase
+  const {error}=await sb.from('passagens').update({[field]:val}).eq('id',id);
+  if(error)console.error('updateRow error:',error);
+}
+
 // ── FILTRO FECHADOS
 function toggleFiltroFech(){
   _filtroFech=!_filtroFech;
