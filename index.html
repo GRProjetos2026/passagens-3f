@@ -313,7 +313,7 @@ footer{margin-top:40px;font-size:12px;color:var(--ink3);text-align:center;paddin
     <div class="header-actions">
       <div style="font-size:13px;color:var(--ink3);line-height:1.6">3F Ltda · 2026</div>
       <div style="display:flex;gap:8px">
-        <button class="btn-export" onclick="exportBackup()" title="Backup completo — todas as passagens de todos os meses">
+        <button class="btn-export" id="btnBackup" onclick="exportBackup()" title="Backup completo — todas as passagens de todos os meses" style="display:none">
           <svg width="14" height="14" viewBox="0 0 16 16" fill="none"><path d="M2 10v3a1 1 0 001 1h10a1 1 0 001-1v-3M8 2v8m0 0L5 7m3 3 3-3" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
           Backup
         </button>
@@ -629,6 +629,7 @@ async function onLogin(user){
   badge.textContent=nivel;badge.className='topbar-badge badge-'+nivel;
   if(nivel==='admin'||nivel==='editor'){
     document.getElementById('btnDB').style.display='inline-flex';
+    document.getElementById('btnBackup').style.display='inline-flex';
   }
   // Carrega dados e inicia realtime
   await loadPassagens();
