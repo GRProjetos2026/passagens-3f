@@ -527,6 +527,24 @@ footer{margin-top:40px;font-size:12px;color:var(--ink3);text-align:center;paddin
       </table>
     </div>
   </div>
+
+  <!-- ROI Charts -->
+  <div style="display:grid;grid-template-columns:1fr 1fr;gap:20px;margin-top:20px">
+    <div class="card">
+      <div class="card-title">ROI por campanha (%)</div>
+      <div class="chart-wrap" style="height:260px"><canvas id="chartRoiPct"></canvas></div>
+    </div>
+    <div class="card">
+      <div class="card-title">Investimento vs Retorno (R$)</div>
+      <div class="chart-wrap" style="height:260px"><canvas id="chartRoiValor"></canvas></div>
+    </div>
+  </div>
+
+  <!-- ROI por Mês (acumulado) -->
+  <div class="card" style="margin-top:20px">
+    <div class="card-title">ROI acumulado por mês</div>
+    <div class="chart-wrap" style="height:260px"><canvas id="chartRoiMes"></canvas></div>
+  </div>
 </div>
 
 <footer>Análise Resultados 2026 · 3F Ltda</footer>
@@ -646,7 +664,7 @@ let allPassagens=[];
 let pendingRows=[];
 let _mesAtivo=null,_segAtivo='geral',_dbMes='abril',_dbCS='gabriel',_dbSeg='b2b',_panelMainTab='dados';
 let realtimeSub=null;
-let chartPassagens,chartDonut,chartTicket,chartHistDonut,chartHistFech;
+let chartPassagens,chartDonut,chartTicket,chartHistDonut,chartHistFech,chartRoiPct,chartRoiValor,chartRoiMes;
 
 const fmt=v=>'R$ '+Math.round(v).toLocaleString('pt-BR');
 const fmtK=v=>v>=1000?'R$ '+Math.round(v/1000)+'k':fmt(v);
@@ -863,6 +881,45 @@ function initCharts(){
       const f=c.chart.data.datasets[0].fechamentos[c.dataIndex]||0;
       return[fmt(c.parsed),'Fechamentos: '+f];
     }}}}}
+  });
+  chartRoiPct=new Chart(document.getElementById('chartRoiPct'),{
+    type:'bar',
+    data:{labels:[],datasets:[{label:'ROI %',data:[],backgroundColor:[],borderColor:[],borderWidth:1.5,borderRadius:6}]},
+    options:{responsive:true,maintainAspectRatio:false,
+      plugins:{legend:{display:false},tooltip:{callbacks:{label:c=>(c.parsed.y>=0?'+':'')+c.parsed.y.toFixed(1)+'%'}}},
+      scales:{
+        x:{grid:{display:false},ticks:{color:tickColor,font:tickFont}},
+        y:{grid:{color:gridColor},ticks:{color:tickColor,font:tickFont,callback:v=>(v>=0?'+':'')+v+'%'},
+          afterDataLimits:scale=>{scale.max=Math.max(scale.max,10);scale.min=Math.min(scale.min,-10);}
+        }
+      }
+    }
+  });
+  chartRoiValor=new Chart(document.getElementById('chartRoiValor'),{
+    type:'bar',
+    data:{labels:[],datasets:[
+      {label:'Investimento',data:[],backgroundColor:'rgba(224,90,90,0.5)',borderColor:'#E05A5A',borderWidth:1.5,borderRadius:6},
+      {label:'Retorno',data:[],backgroundColor:'rgba(62,201,154,0.5)',borderColor:'#3EC99A',borderWidth:1.5,borderRadius:6}
+    ]},
+    options:{responsive:true,maintainAspectRatio:false,
+      plugins:{legend:{display:true,labels:{color:tickColor,font:tickFont}},
+        tooltip:{callbacks:{label:c=>c.dataset.label+': '+fmt(c.parsed.y)}}},
+      scales:{
+        x:{grid:{display:false},ticks:{color:tickColor,font:tickFont}},
+        y:{grid:{color:gridColor},ticks:{color:tickColor,font:tickFont,callback:v=>'R$ '+v.toLocaleString('pt-BR')}}
+      }
+    }
+  });
+  chartRoiMes=new Chart(document.getElementById('chartRoiMes'),{
+    type:'bar',
+    data:{labels:[],datasets:[{label:'ROI %',data:[],backgroundColor:[],borderColor:[],borderWidth:1.5,borderRadius:6}]},
+    options:{responsive:true,maintainAspectRatio:false,
+      plugins:{legend:{display:false},tooltip:{callbacks:{label:c=>(c.parsed.y>=0?'+':'')+c.parsed.y.toFixed(1)+'%'}}},
+      scales:{
+        x:{grid:{display:false},ticks:{color:tickColor,font:tickFont}},
+        y:{grid:{color:gridColor},ticks:{color:tickColor,font:tickFont,callback:v=>(v>=0?'+':'')+v+'%'}}
+      }
+    }
   });
   chartHistFech=new Chart(document.getElementById('chartHistFech'),{
     type:'bar',data:{labels:[],datasets:[{data:[],backgroundColor:[],borderColor:[],borderWidth:1.5,borderRadius:6}]},
@@ -1780,6 +1837,9 @@ function renderRoi(){
     tbody.appendChild(tr);
   });
 
+  // Update ROI charts
+  updateRoiCharts(rows);
+
   // Total row
   if(rows.length>0||pending.length>0){
     const tr = document.createElement('tr');
@@ -1867,6 +1927,50 @@ async function updateRoiRow(el){
   if(row) row[f]=val;
   await sb.from('roi_campanhas').update({[f]:val}).eq('id',id);
   renderRoi();
+}
+
+function updateRoiCharts(rows){
+  if(!chartRoiPct||!chartRoiValor) return;
+  const labels = rows.map(r=>r.campanha||'Sem nome');
+  const roiPcts = rows.map(r=>{
+    const g=(Number(r.msgs)||0)*CUSTO_POR_MSG;
+    const ret=Number(r.retorno)||0;
+    return g>0?Math.round((ret-g)/g*100):0;
+  });
+  const investimentos = rows.map(r=>(Number(r.msgs)||0)*CUSTO_POR_MSG);
+  const retornos = rows.map(r=>Number(r.retorno)||0);
+  const colors = roiPcts.map(v=>v>=0?'rgba(62,201,154,0.6)':'rgba(224,90,90,0.6)');
+  const borders = roiPcts.map(v=>v>=0?'#3EC99A':'#E05A5A');
+
+  chartRoiPct.data.labels=labels;
+  chartRoiPct.data.datasets[0].data=roiPcts;
+  chartRoiPct.data.datasets[0].backgroundColor=colors;
+  chartRoiPct.data.datasets[0].borderColor=borders;
+  chartRoiPct.update();
+
+  chartRoiValor.data.labels=labels;
+  chartRoiValor.data.datasets[0].data=investimentos;
+  chartRoiValor.data.datasets[1].data=retornos;
+  chartRoiValor.update();
+
+  // ROI por mês (acumulado across all months)
+  const mesesComRoi = MESES_KEYS.filter(k=>roiData[k]&&roiData[k].length>0);
+  const mesLabels = mesesComRoi.map(k=>MESES_LABELS[k]);
+  const mesRois = mesesComRoi.map(k=>{
+    const mrs = roiData[k]||[];
+    const tGasto = mrs.reduce((s,r)=>s+(Number(r.msgs)||0)*CUSTO_POR_MSG,0);
+    const tRet = mrs.reduce((s,r)=>s+(Number(r.retorno)||0),0);
+    return tGasto>0?Math.round((tRet-tGasto)/tGasto*100):0;
+  });
+  const mesColors = mesRois.map(v=>v>=0?'rgba(75,158,232,0.6)':'rgba(224,90,90,0.6)');
+  const mesBorders = mesRois.map(v=>v>=0?'#4B9EE8':'#E05A5A');
+  if(chartRoiMes){
+    chartRoiMes.data.labels=mesLabels;
+    chartRoiMes.data.datasets[0].data=mesRois;
+    chartRoiMes.data.datasets[0].backgroundColor=mesColors;
+    chartRoiMes.data.datasets[0].borderColor=mesBorders;
+    chartRoiMes.update();
+  }
 }
 
 function addRoiRow(){
