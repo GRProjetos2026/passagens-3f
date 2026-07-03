@@ -875,8 +875,8 @@ function initCharts(){
   chartRoiValor=new Chart(document.getElementById('chartRoiValor'),{
     type:'bar',
     data:{labels:[],datasets:[
-      {label:'Investimento',data:[],backgroundColor:'rgba(224,90,90,0.55)',borderColor:'#E05A5A',borderWidth:1.5,borderRadius:6},
-      {label:'Retorno',data:[],backgroundColor:'rgba(62,201,154,0.55)',borderColor:'#3EC99A',borderWidth:1.5,borderRadius:6}
+      {label:'Investimento',data:[],backgroundColor:'rgba(224,90,90,0.7)',borderColor:'#E05A5A',borderWidth:1.5,borderRadius:6,yAxisID:'yInvest'},
+      {label:'Retorno',data:[],backgroundColor:'rgba(62,201,154,0.6)',borderColor:'#3EC99A',borderWidth:1.5,borderRadius:6,yAxisID:'yRetorno'}
     ]},
     options:{responsive:true,maintainAspectRatio:false,
       plugins:{
@@ -885,7 +885,8 @@ function initCharts(){
       },
       scales:{
         x:{grid:{display:false},ticks:{color:tickColor,font:tickFont}},
-        y:{grid:{color:gridColor},ticks:{color:tickColor,font:tickFont,callback:v=>'R$ '+v.toLocaleString('pt-BR')}}
+        yRetorno:{type:'linear',position:'left',grid:{color:gridColor},ticks:{color:'#3EC99A',font:tickFont,callback:v=>'R$ '+v.toLocaleString('pt-BR')},title:{display:true,text:'Retorno (R$)',color:'#3EC99A',font:{size:11}}},
+        yInvest:{type:'linear',position:'right',grid:{display:false},ticks:{color:'#E05A5A',font:tickFont,callback:v=>'R$ '+v.toLocaleString('pt-BR')},title:{display:true,text:'Investimento (R$)',color:'#E05A5A',font:{size:11}}}
       }
     }
   });
