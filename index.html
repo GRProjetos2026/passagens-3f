@@ -142,6 +142,41 @@ footer{margin-top:40px;font-size:12px;color:var(--ink3);text-align:center;paddin
 .hist-table tr:hover td{background:var(--surface2)}
 .hist-mes-badge{display:inline-block;padding:2px 10px;border-radius:99px;background:var(--surface2);font-size:12px}
 
+/* ── ROI CAMPANHAS */
+#roiView{display:none}
+.roi-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:20px;flex-wrap:wrap;gap:12px}
+.roi-month-nav{display:flex;gap:6px;flex-wrap:wrap;align-items:center}
+.roi-summary{display:grid;grid-template-columns:repeat(4,1fr);gap:16px;margin-bottom:24px}
+.roi-kpi{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:18px 20px;position:relative;overflow:hidden}
+.roi-kpi::after{content:'';position:absolute;top:0;left:0;right:0;height:3px;background:var(--renov)}
+.roi-kpi:nth-child(2)::after{background:var(--churn)}
+.roi-kpi:nth-child(3)::after{background:var(--upsell)}
+.roi-kpi:nth-child(4)::after{background:var(--antec)}
+.roi-kpi-label{font-size:10px;font-weight:500;text-transform:uppercase;letter-spacing:.07em;color:var(--ink3);margin-bottom:6px}
+.roi-kpi-value{font-family:'DM Serif Display',serif;font-size:28px;color:var(--ink);line-height:1}
+.roi-kpi-sub{font-size:11px;color:var(--ink3);margin-top:4px}
+.roi-table-wrap{overflow-x:auto}
+.roi-table{width:100%;border-collapse:collapse;font-size:13px}
+.roi-table th{text-align:left;font-size:11px;font-weight:500;text-transform:uppercase;letter-spacing:.07em;color:var(--ink3);padding:0 12px 12px;border-bottom:1px solid var(--border);white-space:nowrap}
+.roi-table th:not(:first-child){text-align:right}
+.roi-table td{padding:4px 4px;border-bottom:1px solid rgba(255,255,255,.04);vertical-align:middle}
+.roi-table td:not(:first-child){text-align:right}
+.roi-table tr:last-child td{border-bottom:none}
+.roi-table tr:hover td{background:var(--surface2)}
+.roi-table tr.total-row td{font-weight:500;color:var(--renov);border-top:1px solid var(--border);background:var(--surface2)}
+.roi-input{background:transparent;border:none;color:var(--ink);font-family:'DM Sans',sans-serif;font-size:13px;padding:6px 8px;width:100%;outline:none;border-radius:4px;text-align:right}
+.roi-input:focus{background:var(--surface3)}
+.roi-input-left{text-align:left}
+.roi-calc{color:var(--ink2);font-size:13px;padding:6px 12px;font-variant-numeric:tabular-nums}
+.roi-positive{color:var(--upsell)}
+.roi-negative{color:var(--churn)}
+.btn-roi-add{padding:7px 16px;border-radius:8px;border:none;background:var(--renov);color:#fff;font-family:'DM Sans',sans-serif;font-size:12px;font-weight:500;cursor:pointer;transition:opacity .15s}
+.btn-roi-add:hover{opacity:.85}
+.btn-roi-save{padding:7px 16px;border-radius:8px;border:1px solid var(--upsell);background:transparent;color:var(--upsell);font-family:'DM Sans',sans-serif;font-size:12px;cursor:pointer;transition:all .15s}
+.btn-roi-save:hover{background:var(--upsell);color:#fff}
+.btn-roi-del{padding:7px 12px;border-radius:8px;border:1px solid rgba(224,90,90,.3);background:transparent;color:var(--churn);font-family:'DM Sans',sans-serif;font-size:12px;cursor:pointer;transition:all .15s}
+.btn-roi-del:hover{background:rgba(224,90,90,.1)}
+
 /* ── DADOS GESTÃO */
 #gestaoView{display:none}
 .gestao-filters{display:flex;gap:16px;align-items:flex-end;margin-bottom:24px;flex-wrap:wrap}
@@ -338,6 +373,7 @@ footer{margin-top:40px;font-size:12px;color:var(--ink3);text-align:center;paddin
     <button class="view-tab active" id="vtDashboard" onclick="switchView('dashboard')">Dashboard</button>
     <button class="view-tab" id="vtHistorico" onclick="switchView('historico')">Histórico</button>
     <button class="view-tab" id="vtGestao" onclick="switchView('gestao')">Dados Gestão</button>
+    <button class="view-tab" id="vtRoi" onclick="switchView('roi')">ROI Campanhas</button>
   </div>
 </div>
   <div id="segFilter" style="display:none;">
@@ -453,6 +489,46 @@ footer{margin-top:40px;font-size:12px;color:var(--ink3);text-align:center;paddin
   </div>
 </div>
 
+<!-- ROI CAMPANHAS VIEW -->
+<div id="roiView">
+  <div class="roi-header">
+    <div class="roi-month-nav" id="roiMonthNav"></div>
+    <div style="display:flex;gap:8px" id="roiBtns">
+      <button class="btn-roi-add" onclick="addRoiRow()">+ Campanha</button>
+      <button class="btn-roi-save" onclick="saveRoi()">↑ Salvar</button>
+      <button class="btn-roi-del" onclick="deleteRoiSelected()">✕ Remover</button>
+    </div>
+  </div>
+  <!-- KPIs -->
+  <div class="roi-summary">
+    <div class="roi-kpi"><div class="roi-kpi-label">Total investido</div><div class="roi-kpi-value" id="roiKpiGasto">—</div><div class="roi-kpi-sub">em campanhas no mês</div></div>
+    <div class="roi-kpi"><div class="roi-kpi-label">Total de conversões</div><div class="roi-kpi-value" id="roiKpiConv">—</div><div class="roi-kpi-sub" id="roiKpiConvSub">—</div></div>
+    <div class="roi-kpi"><div class="roi-kpi-label">Retorno total</div><div class="roi-kpi-value" id="roiKpiRetorno">—</div><div class="roi-kpi-sub">valor fechado via campanhas</div></div>
+    <div class="roi-kpi"><div class="roi-kpi-label">ROI geral</div><div class="roi-kpi-value" id="roiKpiRoi">—</div><div class="roi-kpi-sub">retorno / investimento</div></div>
+  </div>
+  <!-- Table -->
+  <div class="card">
+    <div class="card-title">Campanhas do mês <span style="font-size:10px;color:var(--ink3);font-weight:400;margin-left:8px">• Custo calculado automaticamente: R$ 0,36/msg</span></div>
+    <div class="roi-table-wrap">
+      <table class="roi-table">
+        <thead><tr>
+          <th style="width:32px"><input type="checkbox" id="roiCheckAll" onchange="roiToggleAll(this)"></th>
+          <th style="min-width:160px">Campanha</th>
+          <th style="min-width:120px">Msgs enviadas</th>
+          <th style="min-width:120px">Custo total (auto)</th>
+          <th style="min-width:100px">Passagens</th>
+          <th style="min-width:100px">Conversões</th>
+          <th style="min-width:80px">Taxa</th>
+          <th style="min-width:140px">Retorno (R$)</th>
+          <th style="min-width:100px">ROI</th>
+          <th style="min-width:160px">Observação</th>
+        </tr></thead>
+        <tbody id="roiBody"></tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
 <footer>Análise Resultados 2026 · 3F Ltda</footer>
 </div>
 
@@ -561,6 +637,7 @@ const sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 const MESES_KEYS=['janeiro','fevereiro','marco','abril','maio','junho','julho','agosto','setembro','outubro','novembro','dezembro'];
 const MESES_LABELS={janeiro:'Janeiro',fevereiro:'Fevereiro',marco:'Março',abril:'Abril',maio:'Maio',junho:'Junho',julho:'Julho',agosto:'Agosto',setembro:'Setembro',outubro:'Outubro',novembro:'Novembro',dezembro:'Dezembro'};
 const CS_LIST=['gabriel','caio','giovanni'];
+const CUSTO_POR_MSG = 0.36;
 const TIPO_OPTS=['Renovação','Churn','Risco Churn','Upsell','Antecipação','Aquisição','Outro'];
 const TIPO_COR={Renovação:'#4B9EE8',Churn:'#E05A5A','Risco Churn':'#FF8C42',Upsell:'#3EC99A',Antecipação:'#F0A44A',Aquisição:'#9B7FE8',Outro:'#8892A8'};
 
@@ -631,8 +708,12 @@ async function onLogin(user){
     document.getElementById('btnDB').style.display='inline-flex';
     document.getElementById('btnBackup').style.display='inline-flex';
   }
+  if(nivel==='visualizador'){
+    document.getElementById('roiBtns').style.display='none';
+  }
   // Carrega dados e inicia realtime
   await loadPassagens();
+  await loadRoi();
   initRealtime();
   initCharts();
   buildMonthNav();
@@ -1293,7 +1374,9 @@ function switchView(view){
   document.getElementById('segFilter').style.display = (view==='dashboard' && _mesAtivo) ? 'flex' : 'none';
   document.getElementById('historicoView').style.display = view==='historico' ? 'block' : 'none';
   document.getElementById('gestaoView').style.display = view==='gestao' ? 'block' : 'none';
+  document.getElementById('roiView').style.display = view==='roi' ? 'block' : 'none';
   if(view==='historico') renderHistorico();
+  if(view==='roi'){if(!_roiMes){_roiMes=_mesAtivo||MESES_KEYS.find(k=>hasMesData(k))||'junho';}buildRoiMonthNav();renderRoi();}
 }
 
 // ── HISTÓRICO
@@ -1603,6 +1686,234 @@ function copyLink(btn){
   navigator.clipboard.writeText(input.value).then(()=>showToast('Link copiado!')).catch(()=>{
     input.select();document.execCommand('copy');showToast('Link copiado!');
   });
+}
+
+// ── ROI CAMPANHAS
+let roiData = {}; // {mes: [{id, campanha, msgs, gasto, passagens, conversoes, retorno, obs}]}
+let _roiMes = null;
+let _roiPidCounter = 0;
+
+async function loadRoi(){
+  // Load from Supabase roi_campanhas table (create if not exists)
+  try {
+    const {data,error} = await sb.from('roi_campanhas').select('*').order('criado_em',{ascending:true});
+    if(error){ console.warn('ROI table may not exist yet'); return; }
+    roiData = {};
+    (data||[]).forEach(r=>{
+      if(!roiData[r.mes]) roiData[r.mes]=[];
+      roiData[r.mes].push(r);
+    });
+  } catch(e){ console.warn('ROI load error:', e); }
+}
+
+function buildRoiMonthNav(){
+  const nav = document.getElementById('roiMonthNav');
+  nav.innerHTML = '<span class="month-label">Mês:</span>';
+  MESES_KEYS.forEach(k=>{
+    const btn = document.createElement('button');
+    btn.className = 'month-btn' + (k===_roiMes?' active':'');
+    btn.textContent = MESES_LABELS[k];
+    btn.onclick = ()=>{ _roiMes=k; buildRoiMonthNav(); renderRoi(); };
+    nav.appendChild(btn);
+  });
+}
+
+function renderRoi(){
+  if(!_roiMes) return;
+  const rows = roiData[_roiMes] || [];
+  const tbody = document.getElementById('roiBody');
+  tbody.innerHTML = '';
+
+  // Summary
+  let totalGasto=0, totalConv=0, totalPass=0, totalRetorno=0;
+  rows.forEach(r=>{
+    totalGasto += Number(r.gasto)||0;
+    totalConv += Number(r.conversoes)||0;
+    totalPass += Number(r.passagens)||0;
+    totalRetorno += Number(r.retorno)||0;
+  });
+  const roiGeral = totalGasto>0 ? ((totalRetorno-totalGasto)/totalGasto*100) : 0;
+
+  document.getElementById('roiKpiGasto').textContent = fmt(totalGasto);
+  document.getElementById('roiKpiConv').textContent = totalConv;
+  document.getElementById('roiKpiConvSub').textContent = totalPass>0?Math.round(totalConv/totalPass*100)+'% de '+totalPass+' passagens':'0 passagens';
+  document.getElementById('roiKpiRetorno').textContent = fmt(totalRetorno);
+  const roiEl = document.getElementById('roiKpiRoi');
+  roiEl.textContent = (roiGeral>=0?'+':'')+Math.round(roiGeral)+'%';
+  roiEl.style.color = roiGeral>=0?'var(--upsell)':'var(--churn)';
+
+  // Render rows
+  rows.forEach(r=>{
+    const taxa = (Number(r.passagens)||0)>0 ? Math.round((Number(r.conversoes)||0)/(Number(r.passagens)||0)*100) : 0;
+    const roi = (Number(r.gasto)||0)>0 ? ((Number(r.retorno)||0)-(Number(r.gasto)||0))/(Number(r.gasto)||0)*100 : 0;
+    const tr = document.createElement('tr');
+    tr.dataset.id = r.id||'';
+    tr.innerHTML = '<td><input type="checkbox" class="roi-check row-check"></td>'
+      +'<td><input class="roi-input roi-input-left" value="'+esc(r.campanha||'')+'" data-f="campanha" data-id="'+esc(r.id)+'" onblur="updateRoiRow(this)"></td>'
+      +'<td><input class="roi-input" type="number" value="'+(Number(r.msgs)||'')+'" data-f="msgs" data-id="'+esc(r.id)+'" onblur="updateRoiRow(this)" oninput="recalcRoiRow(this)"></td>'
+      +'<td><span class="roi-calc">'+fmt((Number(r.msgs)||0)*CUSTO_POR_MSG)+'</span></td>'
+      +'<td><input class="roi-input" type="number" value="'+(Number(r.passagens)||'')+'" data-f="passagens" data-id="'+esc(r.id)+'" onblur="updateRoiRow(this)" oninput="recalcRoiRow(this)"></td>'
+      +'<td><input class="roi-input" type="number" value="'+(Number(r.conversoes)||'')+'" data-f="conversoes" data-id="'+esc(r.id)+'" onblur="updateRoiRow(this)" oninput="recalcRoiRow(this)"></td>'
+      +'<td><span class="roi-calc">'+taxa+'%</span></td>'
+      +'<td><input class="roi-input" type="number" step="0.01" value="'+(Number(r.retorno)||'')+'" data-f="retorno" data-id="'+esc(r.id)+'" onblur="updateRoiRow(this)" oninput="recalcRoiRow(this)"></td>'
+      +'<td><span class="roi-calc '+(roi>=0?'roi-positive':'roi-negative')+'">'+(roi>=0?'+':'')+Math.round(roi)+'%</span></td>'
+      +'<td><input class="roi-input roi-input-left" value="'+esc(r.obs||'')+'" data-f="obs" data-id="'+esc(r.id)+'" onblur="updateRoiRow(this)"></td>';
+    tbody.appendChild(tr);
+  });
+
+  // Pending rows
+  const pending = roiData['pending_'+_roiMes]||[];
+  pending.forEach((r,pi)=>{
+    const tr = document.createElement('tr');
+    tr.classList.add('new-row');
+    tr.dataset.pendingRoi = r._pid;
+    tr.innerHTML = '<td><input type="checkbox" class="roi-check row-check"></td>'
+      +'<td><input class="roi-input roi-input-left" placeholder="Nome da campanha" data-f="campanha" data-pid="'+r._pid+'" oninput="updateRoiPending(this)"></td>'
+      +'<td><input class="roi-input" type="number" placeholder="0" data-f="msgs" data-pid="'+r._pid+'" oninput="updateRoiPending(this);recalcRoiRow(this)"></td>'
+      +'<td><span class="roi-calc" id="gasto_'+r._pid+'">R$ 0,00</span></td>'
+      +'<td><input class="roi-input" type="number" placeholder="0" data-f="passagens" data-pid="'+r._pid+'" oninput="updateRoiPending(this);recalcRoiRow(this)"></td>'
+      +'<td><input class="roi-input" type="number" placeholder="0" data-f="conversoes" data-pid="'+r._pid+'" oninput="updateRoiPending(this);recalcRoiRow(this)"></td>'
+      +'<td><span class="roi-calc" id="taxa_'+r._pid+'">0%</span></td>'
+      +'<td><input class="roi-input" type="number" step="0.01" placeholder="0,00" data-f="retorno" data-pid="'+r._pid+'" oninput="updateRoiPending(this);recalcRoiRow(this)"></td>'
+      +'<td><span class="roi-calc" id="roi_'+r._pid+'">0%</span></td>'
+      +'<td><input class="roi-input roi-input-left" placeholder="Observação" data-f="obs" data-pid="'+r._pid+'" oninput="updateRoiPending(this)"></td>';
+    tbody.appendChild(tr);
+  });
+
+  // Total row
+  if(rows.length>0||pending.length>0){
+    const tr = document.createElement('tr');
+    tr.className = 'total-row';
+    const taxa2 = totalPass>0?Math.round(totalConv/totalPass*100):0;
+    tr.innerHTML = '<td></td><td style="padding:10px 8px">TOTAL</td>'
+      +'<td></td>'
+      +'<td class="roi-calc">'+fmt(totalGasto)+'</td>'
+      +'<td class="roi-calc">'+totalPass+'</td>'
+      +'<td class="roi-calc">'+totalConv+'</td>'
+      +'<td class="roi-calc">'+taxa2+'%</td>'
+      +'<td class="roi-calc">'+fmt(totalRetorno)+'</td>'
+      +'<td class="roi-calc '+(roiGeral>=0?'roi-positive':'roi-negative')+'">'+(roiGeral>=0?'+':'')+Math.round(roiGeral)+'%</td>'
+      +'<td></td>';
+    tbody.appendChild(tr);
+  }
+}
+
+function recalcRoiRow(el){
+  const tr=el.closest('tr');if(!tr)return;
+  const getVal=f=>Number(tr.querySelector('[data-f="'+f+'"]')?.value)||0;
+  const msgs=getVal('msgs');
+  const gasto=msgs*CUSTO_POR_MSG;
+  const pass=getVal('passagens'),conv=getVal('conversoes'),retorno=getVal('retorno');
+  const taxa=pass>0?Math.round(conv/pass*100):0;
+  const roi=gasto>0?((retorno-gasto)/gasto*100):0;
+  const pid=tr.dataset.pendingRoi;
+  // Update gasto display
+  if(pid){
+    const gEl=document.getElementById('gasto_'+pid);
+    if(gEl)gEl.textContent=fmt(gasto);
+    const row=(roiData['pending_'+_roiMes]||[]).find(r=>r._pid===pid);
+    if(row)row.gasto=gasto;
+    const tEl=document.getElementById('taxa_'+pid);
+    const rEl=document.getElementById('roi_'+pid);
+    if(tEl)tEl.textContent=taxa+'%';
+    if(rEl){rEl.textContent=(roi>=0?'+':'')+Math.round(roi)+'%';rEl.className='roi-calc '+(roi>=0?'roi-positive':'roi-negative');}
+  } else {
+    const gastoSpan=tr.querySelectorAll('.roi-calc')[0];
+    if(gastoSpan)gastoSpan.textContent=fmt(gasto);
+    const taxaSpan=tr.querySelectorAll('.roi-calc')[1];
+    const roiSpan=tr.querySelectorAll('.roi-calc')[2];
+    if(taxaSpan)taxaSpan.textContent=taxa+'%';
+    if(roiSpan){roiSpan.textContent=(roi>=0?'+':'')+Math.round(roi)+'%';roiSpan.className='roi-calc '+(roi>=0?'roi-positive':'roi-negative');}
+  }
+}
+function recalcRoiRow_DISABLED(el){
+  const tr = el.closest('tr');
+  if(!tr) return;
+  const getVal = f => Number(tr.querySelector('[data-f="'+f+'"]')?.value)||0;
+  const pass = getVal('passagens'), conv = getVal('conversoes');
+  const gasto = getVal('gasto'), retorno = getVal('retorno');
+  const taxa = pass>0?Math.round(conv/pass*100):0;
+  const roi = gasto>0?((retorno-gasto)/gasto*100):0;
+  const pid = tr.dataset.pendingRoi;
+  if(pid){
+    const taxaEl = document.getElementById('taxa_'+pid);
+    const roiEl = document.getElementById('roi_'+pid);
+    if(taxaEl) taxaEl.textContent = taxa+'%';
+    if(roiEl){ roiEl.textContent=(roi>=0?'+':'')+Math.round(roi)+'%'; roiEl.className='roi-calc '+(roi>=0?'roi-positive':'roi-negative'); }
+  } else {
+    const spans = tr.querySelectorAll('.roi-calc');
+    if(spans[0]) spans[0].textContent = taxa+'%';
+    if(spans[1]){ spans[1].textContent=(roi>=0?'+':'')+Math.round(roi)+'%'; spans[1].className='roi-calc '+(roi>=0?'roi-positive':'roi-negative'); }
+  }
+}
+
+function updateRoiPending(el){
+  const pid = el.dataset.pid, f = el.dataset.f;
+  const pkey = 'pending_'+_roiMes;
+  if(!roiData[pkey]) roiData[pkey]=[];
+  const row = roiData[pkey].find(r=>r._pid===pid);
+  if(row){
+    row[f]=f==='campanha'||f==='obs'?el.value:(Number(el.value)||0);
+    if(f==='msgs')row.gasto=row.msgs*CUSTO_POR_MSG;
+  }
+}
+
+async function updateRoiRow(el){
+  const id = el.dataset.id; if(!id) return;
+  const f = el.dataset.f;
+  const val = f==='campanha'||f==='obs' ? el.value : (Number(el.value)||0);
+  const rows = roiData[_roiMes]||[];
+  const row = rows.find(r=>r.id===id);
+  if(row) row[f]=val;
+  await sb.from('roi_campanhas').update({[f]:val}).eq('id',id);
+  renderRoi();
+}
+
+function addRoiRow(){
+  _roiPidCounter++;
+  const pkey = 'pending_'+_roiMes;
+  if(!roiData[pkey]) roiData[pkey]=[];
+  roiData[pkey].push({_pid:'rp'+_roiPidCounter,mes:_roiMes,campanha:'',msgs:0,gasto:0,passagens:0,conversoes:0,retorno:0,obs:''});
+  renderRoi();
+  setTimeout(()=>{const w=document.querySelector('.roi-table-wrap');if(w)w.scrollTop=w.scrollHeight;},50);
+}
+
+async function saveRoi(){
+  const pkey = 'pending_'+_roiMes;
+  const pending = roiData[pkey]||[];
+  if(!pending.length){showToast('Nenhuma campanha nova para salvar');return;}
+  const toInsert = pending.map(({_pid,...r})=>({...r,mes:_roiMes,gasto:(Number(r.msgs)||0)*CUSTO_POR_MSG}));
+  const {data,error} = await sb.from('roi_campanhas').insert(toInsert).select();
+  if(error){showToast('Erro: '+error.message);return;}
+  if(!roiData[_roiMes]) roiData[_roiMes]=[];
+  roiData[_roiMes]=[...roiData[_roiMes],...data];
+  roiData[pkey]=[];
+  renderRoi();
+  showToast('✓ '+data.length+' campanha(s) salva(s)');
+}
+
+async function deleteRoiSelected(){
+  const ids=[], pids=[];
+  document.querySelectorAll('.roi-check:checked').forEach(c=>{
+    const tr=c.closest('tr');
+    if(tr.dataset.id) ids.push(tr.dataset.id);
+    if(tr.dataset.pendingRoi) pids.push(tr.dataset.pendingRoi);
+  });
+  if(!ids.length&&!pids.length){showToast('Nenhuma linha selecionada');return;}
+  if(ids.length){
+    await sb.from('roi_campanhas').delete().in('id',ids);
+    roiData[_roiMes]=(roiData[_roiMes]||[]).filter(r=>!ids.includes(r.id));
+  }
+  if(pids.length){
+    const pkey='pending_'+_roiMes;
+    roiData[pkey]=(roiData[pkey]||[]).filter(r=>!pids.includes(r._pid));
+  }
+  renderRoi();
+  showToast((ids.length+pids.length)+' campanha(s) removida(s)');
+}
+
+function roiToggleAll(el){
+  document.querySelectorAll('.roi-check').forEach(c=>{c.checked=el.checked;c.closest('tr').classList.toggle('selected',el.checked);});
 }
 
 // ── START
