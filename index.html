@@ -1782,7 +1782,7 @@ function renderRoi(){
       +'<td><input class="roi-input" type="number" value="'+(Number(r.passagens)||'')+'" data-f="passagens" data-id="'+esc(r.id)+'" onblur="updateRoiRow(this)" oninput="recalcRoiRow(this)"></td>'
       +'<td><input class="roi-input" type="number" value="'+(Number(r.conversoes)||'')+'" data-f="conversoes" data-id="'+esc(r.id)+'" onblur="updateRoiRow(this)" oninput="recalcRoiRow(this)"></td>'
       +'<td><span class="roi-calc">'+taxa+'%</span></td>'
-      +'<td><input class="roi-input" type="number" step="0.01" value="'+(Number(r.retorno)||'')+'" data-f="retorno" data-id="'+esc(r.id)+'" onblur="updateRoiRow(this)" oninput="recalcRoiRow(this)"></td>'
+      +'<td><input class="roi-input" type="number" step="0.01" value="'+fmt(Number(r.retorno)||0)+'" data-f="retorno" data-id="'+esc(r.id)+'" onblur="updateRoiRow(this)" oninput="recalcRoiRow(this)" onfocus="this.value=Number(this.dataset.raw||this.value.replace(/[^0-9,.]/g,\'\').replace(\',\',\'.\'))" data-raw="'+(Number(r.retorno)||0)+'></td>'
       +'<td><span class="roi-calc '+(roi>=0?'roi-positive':'roi-negative')+'">'+(roi>=0?'+':'')+Math.round(roi)+'%</span></td>'
       +'<td><input class="roi-input roi-input-left" value="'+esc(r.obs||'')+'" data-f="obs" data-id="'+esc(r.id)+'" onblur="updateRoiRow(this)"></td>';
     tbody.appendChild(tr);
