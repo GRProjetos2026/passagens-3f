@@ -715,7 +715,8 @@ async function onLogin(user){
     document.getElementById('btnBackup').style.display='inline-flex';
   }
   if(nivel==='visualizador'){
-    document.getElementById('roiBtns').style.display='none';
+    const rb=document.getElementById('roiBtns');
+    if(rb)rb.style.display='none';
   }
   // Carrega dados e inicia realtime
   await loadPassagens();
@@ -870,19 +871,7 @@ function initCharts(){
       return[fmt(c.parsed),'Fechamentos: '+f];
     }}}}}
   });
-  chartRoiPct=new Chart(document.getElementById('chartRoiPct'),{
-    type:'bar',
-    data:{labels:[],datasets:[{label:'ROI %',data:[],backgroundColor:[],borderColor:[],borderWidth:1.5,borderRadius:6}]},
-    options:{responsive:true,maintainAspectRatio:false,
-      plugins:{legend:{display:false},tooltip:{callbacks:{label:c=>(c.parsed.y>=0?'+':'')+c.parsed.y.toFixed(1)+'%'}}},
-      scales:{
-        x:{grid:{display:false},ticks:{color:tickColor,font:tickFont}},
-        y:{grid:{color:gridColor},ticks:{color:tickColor,font:tickFont,callback:v=>(v>=0?'+':'')+v+'%'},
-          afterDataLimits:scale=>{scale.max=Math.max(scale.max,10);scale.min=Math.min(scale.min,-10);}
-        }
-      }
-    }
-  });
+
   chartRoiValor=new Chart(document.getElementById('chartRoiValor'),{
     type:'bar',
     data:{labels:[],datasets:[
@@ -900,17 +889,7 @@ function initCharts(){
       }
     }
   });
-  chartRoiMes=new Chart(document.getElementById('chartRoiMes'),{
-    type:'bar',
-    data:{labels:[],datasets:[{label:'ROI %',data:[],backgroundColor:[],borderColor:[],borderWidth:1.5,borderRadius:6}]},
-    options:{responsive:true,maintainAspectRatio:false,
-      plugins:{legend:{display:false},tooltip:{callbacks:{label:c=>(c.parsed.y>=0?'+':'')+c.parsed.y.toFixed(1)+'%'}}},
-      scales:{
-        x:{grid:{display:false},ticks:{color:tickColor,font:tickFont}},
-        y:{grid:{color:gridColor},ticks:{color:tickColor,font:tickFont,callback:v=>(v>=0?'+':'')+v+'%'}}
-      }
-    }
-  });
+
   chartHistFech=new Chart(document.getElementById('chartHistFech'),{
     type:'bar',data:{labels:[],datasets:[{data:[],backgroundColor:[],borderColor:[],borderWidth:1.5,borderRadius:6}]},
     options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false},tooltip:{callbacks:{label:c=>c.parsed.y+' fechamentos'}}},
