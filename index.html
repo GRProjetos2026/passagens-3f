@@ -1782,7 +1782,7 @@ function renderRoi(){
       +'<td><input class="roi-input" type="number" value="'+(Number(r.passagens)||'')+'" data-f="passagens" data-id="'+esc(r.id)+'" onblur="updateRoiRow(this)" oninput="recalcRoiRow(this)"></td>'
       +'<td><input class="roi-input" type="number" value="'+(Number(r.conversoes)||'')+'" data-f="conversoes" data-id="'+esc(r.id)+'" onblur="updateRoiRow(this)" oninput="recalcRoiRow(this)"></td>'
       +'<td><span class="roi-calc">'+taxa+'%</span></td>'
-      +'<td><input class="roi-input" type="number" step="0.01" value="'+fmt(Number(r.retorno)||0)+'" data-f="retorno" data-id="'+esc(r.id)+'" onblur="updateRoiRow(this)" oninput="recalcRoiRow(this)" onfocus="this.value=Number(this.dataset.raw||this.value.replace(/[^0-9,.]/g,\'\').replace(\',\',\'.\'))" data-raw="'+(Number(r.retorno)||0)+'></td>'
+      +'<td style="text-align:right;padding:6px 12px;color:var(--ink);font-variant-numeric:tabular-nums"><span style="cursor:pointer" onclick="editRetorno(this,\''+esc(r.id)+'\')">'+(Number(r.retorno)>0?fmt(Number(r.retorno)):'R$ 0')+'</span><input class="roi-input" type="number" step="0.01" value="'+(Number(r.retorno)||'')+'" data-f="retorno" data-id="'+esc(r.id)+'" style="display:none" onblur="saveRetorno(this)" oninput="recalcRoiRow(this)"></td>'
       +'<td><span class="roi-calc '+(roi>=0?'roi-positive':'roi-negative')+'">'+(roi>=0?'+':'')+Math.round(roi)+'%</span></td>'
       +'<td><input class="roi-input roi-input-left" value="'+esc(r.obs||'')+'" data-f="obs" data-id="'+esc(r.id)+'" onblur="updateRoiRow(this)"></td>';
     tbody.appendChild(tr);
@@ -1908,6 +1908,24 @@ function updateRoiCharts(rows){
   chartRoiValor.data.datasets[0].data=investimentos;
   chartRoiValor.data.datasets[1].data=retornos;
   chartRoiValor.update();
+}
+
+function editRetorno(span, id){
+  const td=span.parentElement;
+  const input=td.querySelector('input');
+  span.style.display='none';
+  input.style.display='block';
+  input.focus();
+  input.select();
+}
+function saveRetorno(input){
+  const td=input.parentElement;
+  const span=td.querySelector('span');
+  const val=Number(input.value)||0;
+  input.style.display='none';
+  span.style.display='';
+  span.textContent=val>0?fmt(val):'R$ 0';
+  updateRoiRow(input);
 }
 
 function addRoiRow(){
