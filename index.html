@@ -256,6 +256,9 @@ footer{margin-top:40px;font-size:12px;color:var(--ink3);text-align:center;paddin
 .cell-select:focus{background:var(--surface3)}
 .cell-select option{background:#1E2438;color:var(--ink)}
 .row-check{width:14px;height:14px;cursor:pointer;accent-color:var(--renov)}
+.boleto-btn{background:transparent;border:none;cursor:pointer;font-size:16px;padding:4px;border-radius:4px;transition:transform .15s;line-height:1}
+.boleto-btn:hover{transform:scale(1.2)}
+.boleto-btn.boleto-ativo{filter:drop-shadow(0 0 4px #4B9EE8)}
 .excel-opt{padding:8px 14px;font-size:12px;color:var(--ink2);cursor:pointer;transition:background .15s;white-space:nowrap}
 .excel-opt:hover{background:var(--surface3);color:var(--ink)}
 .db-table tr.dup-link td{background:rgba(240,164,74,0.12)!important;border-left:3px solid #F0A44A;}
@@ -1027,8 +1030,10 @@ function renderDBGrid(){
       +'<td><select class="cell-select" style="min-width:64px" data-f="comprou" data-id="'+esc(row.id)+'" onchange="updateRow(this)"><option'+(compSim?' selected':'')+'>Sim</option><option'+(!compSim?' selected':'')+'>Não</option></select></td>'
       +'<td><input class="cell-input" style="min-width:86px" value="'+esc(row.notas||'')+'" data-f="notas" data-id="'+esc(row.id)+'" onblur="updateRow(this)" placeholder="Anotação..."></td>'
       +'<td><input class="cell-input" type="number" style="min-width:96px" value="'+fechVal+'" data-f="fechamento" data-id="'+esc(row.id)+'" onblur="updateRow(this)"></td>'
-      +'<td><input class="cell-input" style="min-width:86px" value="'+esc(row.vendedor||'')+'" data-f="vendedor" data-id="'+esc(row.id)+'" onblur="updateRow(this)"></td>';
+      +'<td><input class="cell-input" style="min-width:86px" value="'+esc(row.vendedor||'')+'" data-f="vendedor" data-id="'+esc(row.id)+'" onblur="updateRow(this)"></td>'
+      +'<td style="text-align:center"><button class="boleto-btn'+(row.boleto?'  boleto-ativo':'')+'" onclick="toggleBoleto(this,\''+esc(row.id)+'\')" title="'+(row.boleto?'Boleto gerado':'Marcar boleto gerado')+'">'+(row.boleto?'🔵':'⚪')+'</button></td>';
     tbody.appendChild(tr);
+    if(row.boleto) tr.classList.add('boleto-row');
   });
 
   // Pending (new) rows
@@ -1049,7 +1054,8 @@ function renderDBGrid(){
       +'<td><select class="cell-select" style="min-width:64px" data-pid="'+row._pid+'" data-f="comprou" onchange="updatePendingField(this)"><option>Sim</option><option selected>Não</option></select></td>'
       +'<td><input class="cell-input" style="min-width:86px" data-pid="'+row._pid+'" data-f="notas" placeholder="Anotação..." onblur="updatePendingField(this)"></td>'
       +'<td><input class="cell-input" type="number" style="min-width:96px" value="0" data-pid="'+row._pid+'" data-f="fechamento" oninput="updatePendingField(this)" onblur="updatePendingField(this)"></td>'
-      +'<td><input class="cell-input" style="min-width:86px" data-pid="'+row._pid+'" data-f="vendedor" onblur="updatePendingField(this)"></td>';
+      +'<td><input class="cell-input" style="min-width:86px" data-pid="'+row._pid+'" data-f="vendedor" onblur="updatePendingField(this)"></td>'
+      +'<td style="text-align:center"><button class="boleto-btn" onclick="toggleBoletoPending(this,\''+row._pid+'\')" title="Marcar boleto gerado">⚪</button></td>';
     tbody.appendChild(tr);
   });
 
@@ -1077,6 +1083,12 @@ function markDupRows(){
       tr.classList.add('dup-link');
     } else {
       tr.classList.remove('dup-link');
+    }
+    // Preserve boleto-row class based on data
+    const tid=tr.dataset.id;
+    if(tid){
+      const rr=allPassagens.find(x=>x.id===tid);
+      if(rr&&rr.boleto) tr.classList.add('boleto-row');
     }
   });
 }
@@ -1661,6 +1673,29 @@ function exportDbExcel(csFilter,segFilter,somenteFeche){
   XLSX.writeFile(wb,'Resultados_'+mesLabel+'_'+csLabel+'_'+segLabel+fechLabel+'_'+new Date().toISOString().slice(0,10)+'.xlsx');
   showToast('Excel exportado — '+allRows.length+' linhas');
   document.getElementById('excelMenu').style.display='none';
+}
+
+// ── BOLETO TOGGLE
+async function toggleBoleto(btn, id){
+  const tr=btn.closest('tr');
+  const row=allPassagens.find(r=>r.id===id);
+  if(!row)return;
+  row.boleto=!row.boleto;
+  btn.textContent=row.boleto?'🔵':'⚪';
+  btn.title=row.boleto?'Boleto gerado':'Marcar boleto gerado';
+  btn.classList.toggle('boleto-ativo',row.boleto);
+  tr.classList.toggle('boleto-row',row.boleto);
+  await sb.from('passagens').update({boleto:row.boleto}).eq('id',id);
+  showToast(row.boleto?'🔵 Boleto marcado':'⚪ Boleto desmarcado');
+}
+function toggleBoletoPending(btn, pid){
+  const tr=btn.closest('tr');
+  const row=pendingRows.find(r=>r._pid===pid);
+  if(!row)return;
+  row.boleto=!row.boleto;
+  btn.textContent=row.boleto?'🔵':'⚪';
+  btn.classList.toggle('boleto-ativo',row.boleto);
+  tr.classList.toggle('boleto-row',row.boleto);
 }
 
 // ── DUPLICATE LINK CHECK
