@@ -75,9 +75,12 @@ body.panel-open #appScreen{padding-right:calc(var(--panel-w) + 32px)}
 .kpi-row{display:grid;grid-template-columns:repeat(4,1fr);gap:16px;margin-bottom:32px}
 .kpi{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:20px 24px;position:relative;overflow:hidden}
 .kpi::after{content:'';position:absolute;top:0;left:0;right:0;height:3px}
-.kpi:nth-child(1)::after{background:var(--renov)}.kpi:nth-child(2)::after{background:var(--upsell)}
-.kpi:nth-child(3)::after{background:var(--antec)}.kpi:nth-child(4)::after{background:var(--churn)}
-.kpi:nth-child(5)::after{background:var(--venda)}
+.kpi:nth-child(1)::after{background:var(--renov)}
+.kpi:nth-child(2)::after{background:var(--antec)}
+.kpi:nth-child(3)::after{background:var(--upsell)}
+.kpi:nth-child(4)::after{background:var(--upsell)}
+.kpi:nth-child(5)::after{background:var(--churn)}
+.kpi:nth-child(6)::after{background:var(--venda)}
 .kpi-label{font-size:11px;font-weight:500;text-transform:uppercase;letter-spacing:.08em;color:var(--ink3);margin-bottom:8px}
 .kpi-value{font-family:'DM Serif Display',serif;font-size:32px;font-weight:400;color:var(--ink);line-height:1}
 .kpi-sub{font-size:11px;color:var(--ink3);margin-top:6px}
@@ -413,12 +416,13 @@ footer{margin-top:40px;font-size:12px;color:var(--ink3);text-align:center;paddin
     <button class="month-btn" id="segGov" onclick="selectSeg('gov')">GOV</button>
   </div>
 
-  <div class="kpi-row" style="grid-template-columns:repeat(5,1fr)">
+  <div class="kpi-row" style="grid-template-columns:repeat(6,1fr)">
     <div class="kpi"><div class="kpi-label">Total de passagens</div><div class="kpi-value" id="kpiPass">—</div><div class="kpi-sub" id="kpiPassSub">—</div></div>
-    <div class="kpi"><div class="kpi-label">Valor total fechado</div><div class="kpi-value" id="kpiVal">—</div><div class="kpi-sub" id="kpiValSub">—</div></div>
     <div class="kpi"><div class="kpi-label">Valor total previsto</div><div class="kpi-value" id="kpiPrevisto">—</div><div class="kpi-sub" id="kpiPrevistoSub">—</div></div>
-    <div class="kpi"><div class="kpi-label">Ticket médio geral</div><div class="kpi-value" id="kpiTicket">—</div><div class="kpi-sub">por fechamento realizado</div></div>
+    <div class="kpi"><div class="kpi-label">Passagens fechadas</div><div class="kpi-value" id="kpiFechadas">—</div><div class="kpi-sub" id="kpiFechadasSub">—</div></div>
+    <div class="kpi"><div class="kpi-label">Valor total fechado</div><div class="kpi-value" id="kpiVal">—</div><div class="kpi-sub" id="kpiValSub">—</div></div>
     <div class="kpi"><div class="kpi-label">Taxa de fechamento</div><div class="kpi-value" id="kpiTaxa">—</div><div class="kpi-sub" id="kpiTaxaSub">—</div></div>
+    <div class="kpi"><div class="kpi-label">Previsto vs Realizado</div><div class="kpi-value" id="kpiPrevReal">—</div><div class="kpi-sub" id="kpiPrevRealSub">—</div></div>
   </div>
 
   <div class="charts-grid">
@@ -993,15 +997,25 @@ function renderDashboard(){
   const taxa=totalPass>0?Math.round(totalFech/totalPass*100):0;
   const totalPrevisto=rows.reduce((s,r)=>s+(Number(r.valor_previsto)||0),0);
   const passComPrevisto=rows.filter(r=>(Number(r.valor_previsto)||0)>0).length;
+  const prevRealPct=totalPrevisto>0?Math.round(totalVal/totalPrevisto*100):0;
+
+  // Card 1: Total passagens
+  document.getElementById('kpiPass').textContent=totalPass;
+  // Card 2: Valor previsto
   document.getElementById('kpiPrevisto').textContent=fmt(totalPrevisto);
   document.getElementById('kpiPrevistoSub').textContent=passComPrevisto+' passagens com módulos';
-  document.getElementById('kpiPass').textContent=totalPass;
+  // Card 3: Passagens fechadas
+  document.getElementById('kpiFechadas').textContent=totalFech;
+  document.getElementById('kpiFechadasSub').textContent='de '+totalPass+' passagens';
+  // Card 6: Previsto vs Realizado
+  document.getElementById('kpiPrevReal').textContent=prevRealPct+'%';
+  document.getElementById('kpiPrevRealSub').textContent=fmt(totalVal)+' de '+fmt(totalPrevisto)+' previsto';
   document.getElementById('kpiPassSub').textContent='em '+data.length+' tipos de campanha';
   document.getElementById('kpiVal').textContent=fmt(totalVal);
   document.getElementById('kpiValSub').textContent='em '+totalFech+' fechamentos';
-  document.getElementById('kpiTicket').textContent=fmt(ticketG);
+  // kpiTicket removed from layout
   document.getElementById('kpiTaxa').textContent=taxa+'%';
-  document.getElementById('kpiTaxaSub').textContent=totalFech+' de '+totalPass+' passagens';
+  document.getElementById('kpiTaxaSub').textContent=totalFech+' fechamentos de '+totalPass+' passagens';
   const maxPass=Math.max.apply(null,data.map(d=>d.passagens));
   const tbody=document.getElementById('tableBody');tbody.innerHTML='';
   data.forEach(d=>{
