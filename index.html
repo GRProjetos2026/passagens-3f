@@ -652,6 +652,7 @@ footer{margin-top:40px;font-size:12px;color:var(--ink3);text-align:center;paddin
         <th style="min-width:66px">Comprou</th>
         <th style="min-width:140px">Anotações</th>
         <th style="min-width:88px">Fechamento</th>
+        <th style="min-width:110px">Fechamento</th>
         <th style="min-width:110px">Módulos/Previsto</th>
         <th style="min-width:88px">Vendedor</th>
       </tr></thead>
@@ -1140,8 +1141,8 @@ function renderDBGrid(){
       +'<td><div class="link-cell"><input class="cell-input" style="min-width:150px" data-pid="'+row._pid+'" data-f="link" onblur="checkDupLink(this);updatePendingField(this)"><button class="copy-btn" onclick="copyLink(this)" title="Copiar link">📋</button></div></td>'
       +'<td><select class="cell-select" style="min-width:64px" data-pid="'+row._pid+'" data-f="comprou" onchange="updatePendingField(this)"><option>Sim</option><option selected>Não</option></select></td>'
       +'<td><input class="cell-input" style="min-width:86px" data-pid="'+row._pid+'" data-f="notas" placeholder="Anotação..." onblur="updatePendingField(this)"></td>'
-      +'<td style="text-align:center"><span class="modulo-previsto-badge" id="badge_'+row._pid+'" onclick="openModulos(null,\''+row._pid+'\')" >+ Módulos</span></td>'
       +'<td><input class="cell-input" type="number" style="min-width:96px" value="0" data-pid="'+row._pid+'" data-f="fechamento" oninput="updatePendingField(this)" onblur="updatePendingField(this)"></td>'
+      +'<td style="text-align:center"><span class="modulo-previsto-badge" id="badge_'+row._pid+'" onclick="openModulos(null,\''+row._pid+'\')" >+ Módulos</span></td>'
       +'<td><input class="cell-input" style="min-width:86px" data-pid="'+row._pid+'" data-f="vendedor" onblur="updatePendingField(this)"></td>'
       +'<td style="text-align:center"><button class="boleto-btn" onclick="toggleBoletoPending(this,\''+row._pid+'\')" title="Marcar boleto gerado">⚪</button></td>';
     tbody.appendChild(tr);
