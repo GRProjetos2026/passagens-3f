@@ -77,6 +77,7 @@ body.panel-open #appScreen{padding-right:calc(var(--panel-w) + 32px)}
 .kpi::after{content:'';position:absolute;top:0;left:0;right:0;height:3px}
 .kpi:nth-child(1)::after{background:var(--renov)}.kpi:nth-child(2)::after{background:var(--upsell)}
 .kpi:nth-child(3)::after{background:var(--antec)}.kpi:nth-child(4)::after{background:var(--churn)}
+.kpi:nth-child(5)::after{background:var(--venda)}
 .kpi-label{font-size:11px;font-weight:500;text-transform:uppercase;letter-spacing:.08em;color:var(--ink3);margin-bottom:8px}
 .kpi-value{font-family:'DM Serif Display',serif;font-size:32px;font-weight:400;color:var(--ink);line-height:1}
 .kpi-sub{font-size:11px;color:var(--ink3);margin-top:6px}
@@ -289,6 +290,32 @@ footer{margin-top:40px;font-size:12px;color:var(--ink3);text-align:center;paddin
 .save-btn:disabled{opacity:.4;cursor:not-allowed}
 .paste-hint{font-size:11px;color:var(--ink3)}
 
+/* ── MÓDULOS MODAL */
+#modulosModal{position:fixed;inset:0;background:rgba(0,0,0,.7);z-index:500;display:none;align-items:center;justify-content:center}
+#modulosModal.open{display:flex}
+.modulos-card{background:#161B26;border:1px solid var(--border2);border-radius:14px;width:520px;max-height:80vh;display:flex;flex-direction:column;overflow:hidden}
+.modulos-header{padding:18px 24px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between}
+.modulos-title{font-size:14px;font-weight:500;color:var(--ink)}
+.modulos-close{width:28px;height:28px;border-radius:6px;border:1px solid var(--border);background:transparent;color:var(--ink2);cursor:pointer;font-size:16px;display:flex;align-items:center;justify-content:center}
+.modulos-close:hover{background:var(--surface2);color:var(--ink)}
+.modulos-body{overflow-y:auto;padding:16px 24px;flex:1}
+.modulos-body::-webkit-scrollbar{width:4px}
+.modulos-body::-webkit-scrollbar-thumb{background:var(--surface3);border-radius:99px}
+.modulo-item{display:flex;align-items:center;justify-content:space-between;padding:10px 0;border-bottom:1px solid var(--border);cursor:pointer;transition:background .1s}
+.modulo-item:last-child{border-bottom:none}
+.modulo-item:hover{background:var(--surface2);margin:0 -8px;padding:10px 8px;border-radius:6px}
+.modulo-item label{display:flex;align-items:center;gap:10px;cursor:pointer;flex:1}
+.modulo-item input[type=checkbox]{width:15px;height:15px;accent-color:var(--renov);cursor:pointer;flex-shrink:0}
+.modulo-nome{font-size:13px;color:var(--ink)}
+.modulo-preco{font-size:13px;color:var(--upsell);font-weight:500;white-space:nowrap;margin-left:12px}
+.modulos-footer{padding:16px 24px;border-top:1px solid var(--border);display:flex;align-items:center;justify-content:space-between}
+.modulos-total{font-family:'DM Serif Display',serif;font-size:22px;color:var(--ink)}
+.modulos-total span{font-size:12px;font-weight:400;color:var(--ink3);font-family:'DM Sans',sans-serif;display:block;margin-bottom:2px}
+.btn-modulos-confirm{padding:10px 24px;border-radius:8px;border:none;background:var(--renov);color:#fff;font-family:'DM Sans',sans-serif;font-size:13px;font-weight:500;cursor:pointer}
+.btn-modulos-confirm:hover{opacity:.85}
+.modulo-previsto-badge{display:inline-flex;align-items:center;gap:5px;background:rgba(75,158,232,.15);color:var(--renov);border-radius:99px;padding:3px 10px;font-size:11px;font-weight:500;cursor:pointer;white-space:nowrap}
+.modulo-previsto-badge:hover{background:rgba(75,158,232,.25)}
+
 #toast{position:fixed;bottom:28px;left:50%;transform:translateX(-50%) translateY(20px);background:var(--surface3);border:1px solid var(--border2);color:var(--ink);padding:10px 20px;border-radius:99px;font-size:13px;opacity:0;transition:all .25s;z-index:300;pointer-events:none;white-space:nowrap}
 #toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
 
@@ -386,9 +413,10 @@ footer{margin-top:40px;font-size:12px;color:var(--ink3);text-align:center;paddin
     <button class="month-btn" id="segGov" onclick="selectSeg('gov')">GOV</button>
   </div>
 
-  <div class="kpi-row">
+  <div class="kpi-row" style="grid-template-columns:repeat(5,1fr)">
     <div class="kpi"><div class="kpi-label">Total de passagens</div><div class="kpi-value" id="kpiPass">—</div><div class="kpi-sub" id="kpiPassSub">—</div></div>
     <div class="kpi"><div class="kpi-label">Valor total fechado</div><div class="kpi-value" id="kpiVal">—</div><div class="kpi-sub" id="kpiValSub">—</div></div>
+    <div class="kpi"><div class="kpi-label">Valor total previsto</div><div class="kpi-value" id="kpiPrevisto">—</div><div class="kpi-sub" id="kpiPrevistoSub">—</div></div>
     <div class="kpi"><div class="kpi-label">Ticket médio geral</div><div class="kpi-value" id="kpiTicket">—</div><div class="kpi-sub">por fechamento realizado</div></div>
     <div class="kpi"><div class="kpi-label">Taxa de fechamento</div><div class="kpi-value" id="kpiTaxa">—</div><div class="kpi-sub" id="kpiTaxaSub">—</div></div>
   </div>
@@ -620,6 +648,7 @@ footer{margin-top:40px;font-size:12px;color:var(--ink3);text-align:center;paddin
         <th style="min-width:66px">Comprou</th>
         <th style="min-width:140px">Anotações</th>
         <th style="min-width:88px">Fechamento</th>
+        <th style="min-width:110px">Módulos/Previsto</th>
         <th style="min-width:88px">Vendedor</th>
       </tr></thead>
       <tbody id="dbBody"></tbody>
@@ -636,6 +665,24 @@ footer{margin-top:40px;font-size:12px;color:var(--ink3);text-align:center;paddin
 </div>
 
 <div id="toast"></div>
+
+<!-- MÓDULOS MODAL -->
+<div id="modulosModal">
+  <div class="modulos-card">
+    <div class="modulos-header">
+      <div class="modulos-title">📦 Módulos de interesse</div>
+      <button class="modulos-close" onclick="closeModulos()">✕</button>
+    </div>
+    <div class="modulos-body" id="modulosBody"></div>
+    <div class="modulos-footer">
+      <div class="modulos-total">
+        <span>Valor previsto</span>
+        <span id="modulosTotal">R$ 0</span>
+      </div>
+      <button class="btn-modulos-confirm" onclick="confirmModulos()">Confirmar</button>
+    </div>
+  </div>
+</div>
 <div id="warningBanner" style="display:none;position:fixed;bottom:72px;left:50%;transform:translateX(-50%);background:#2a1a1a;border:1px solid var(--churn);color:#f4a0a0;padding:12px 24px;border-radius:10px;font-size:13px;z-index:300;pointer-events:none;white-space:nowrap;align-items:center;gap:8px;max-width:90vw;text-align:center"></div>
 
 <script>
@@ -647,6 +694,27 @@ const MESES_KEYS=['janeiro','fevereiro','marco','abril','maio','junho','julho','
 const MESES_LABELS={janeiro:'Janeiro',fevereiro:'Fevereiro',marco:'Março',abril:'Abril',maio:'Maio',junho:'Junho',julho:'Julho',agosto:'Agosto',setembro:'Setembro',outubro:'Outubro',novembro:'Novembro',dezembro:'Dezembro'};
 const CS_LIST=['gabriel','caio','giovanni'];
 const CUSTO_POR_MSG = 0.36;
+const MODULOS = [
+  {id:'orcamento', nome:'Orçamento', preco:1099},
+  {id:'bases_adicionais', nome:'Bases Adicionais', preco:1099},
+  {id:'gbp3', nome:'Gestão de Base Própria (3 Bases)', preco:599},
+  {id:'gbp5', nome:'Gestão de Base Própria (5 Bases)', preco:899},
+  {id:'orcabim', nome:'OrçaBIM', preco:1199},
+  {id:'of_eletrico', nome:'OF Elétrico', preco:1199},
+  {id:'of_hidraulico', nome:'OF Hidráulico', preco:1199},
+  {id:'of_estrutural', nome:'OF Estrutural', preco:1199},
+  {id:'of_bi', nome:'OF BI', preco:3999},
+  {id:'of_civil3d', nome:'OF Civil 3D', preco:1199},
+  {id:'of_cde_ini', nome:'OF CDE Iniciante', preco:1999},
+  {id:'of_cde_emp', nome:'OF CDE Empresarial', preco:5999},
+  {id:'of_cde_org', nome:'OF CDE Organização e Governo', preco:29999},
+  {id:'of_medicao', nome:'OF Medição', preco:1199},
+  {id:'compras', nome:'Compras', preco:1099},
+  {id:'diario', nome:'Diário', preco:1099},
+  {id:'planejamento', nome:'Planejamento', preco:1099},
+  {id:'modulo_ti', nome:'Módulo TI', preco:3000},
+  {id:'modulo_ti_parceiro', nome:'Módulo TI Parceiro', preco:999},
+];
 const TIPO_OPTS=['Renovação','Churn','Risco Churn','Upsell','Antecipação','Aquisição','Outro'];
 const TIPO_COR={Renovação:'#4B9EE8',Churn:'#E05A5A','Risco Churn':'#FF8C42',Upsell:'#3EC99A',Antecipação:'#F0A44A',Aquisição:'#9B7FE8',Outro:'#8892A8'};
 
@@ -923,6 +991,10 @@ function renderDashboard(){
   const totalPass=data.reduce((s,d)=>s+d.passagens,0),totalFech=data.reduce((s,d)=>s+d.fechamentos,0);
   const totalVal=data.reduce((s,d)=>s+d.valorTotal,0),ticketG=totalFech>0?totalVal/totalFech:0;
   const taxa=totalPass>0?Math.round(totalFech/totalPass*100):0;
+  const totalPrevisto=rows.reduce((s,r)=>s+(Number(r.valor_previsto)||0),0);
+  const passComPrevisto=rows.filter(r=>(Number(r.valor_previsto)||0)>0).length;
+  document.getElementById('kpiPrevisto').textContent=fmt(totalPrevisto);
+  document.getElementById('kpiPrevistoSub').textContent=passComPrevisto+' passagens com módulos';
   document.getElementById('kpiPass').textContent=totalPass;
   document.getElementById('kpiPassSub').textContent='em '+data.length+' tipos de campanha';
   document.getElementById('kpiVal').textContent=fmt(totalVal);
@@ -1029,6 +1101,7 @@ function renderDBGrid(){
       +'<td><div class="link-cell"><input class="cell-input" style="min-width:150px" value="'+esc(row.link||'')+'" data-f="link" data-id="'+esc(row.id)+'" onblur="checkDupLink(this);updateRow(this)" title="'+esc(row.link||'')+'"><button class="copy-btn" onclick="copyLink(this)" title="Copiar link">📋</button></div></td>'
       +'<td><select class="cell-select" style="min-width:64px" data-f="comprou" data-id="'+esc(row.id)+'" onchange="updateRow(this)"><option'+(compSim?' selected':'')+'>Sim</option><option'+(!compSim?' selected':'')+'>Não</option></select></td>'
       +'<td><input class="cell-input" style="min-width:86px" value="'+esc(row.notas||'')+'" data-f="notas" data-id="'+esc(row.id)+'" onblur="updateRow(this)" placeholder="Anotação..."></td>'
+      +'<td style="text-align:center"><span class="modulo-previsto-badge" onclick="openModulos(\''+esc(row.id)+'\',null)">'+(row.valor_previsto>0?fmt(row.valor_previsto):'+ Módulos')+'</span></td>'
       +'<td><input class="cell-input" type="number" style="min-width:96px" value="'+fechVal+'" data-f="fechamento" data-id="'+esc(row.id)+'" onblur="updateRow(this)"></td>'
       +'<td><input class="cell-input" style="min-width:86px" value="'+esc(row.vendedor||'')+'" data-f="vendedor" data-id="'+esc(row.id)+'" onblur="updateRow(this)"></td>'
       +'<td style="text-align:center"><button class="boleto-btn'+(row.boleto?'  boleto-ativo':'')+'" onclick="toggleBoleto(this,\''+esc(row.id)+'\')" title="'+(row.boleto?'Boleto gerado':'Marcar boleto gerado')+'">'+(row.boleto?'🔵':'⚪')+'</button></td>';
@@ -1053,6 +1126,7 @@ function renderDBGrid(){
       +'<td><div class="link-cell"><input class="cell-input" style="min-width:150px" data-pid="'+row._pid+'" data-f="link" onblur="checkDupLink(this);updatePendingField(this)"><button class="copy-btn" onclick="copyLink(this)" title="Copiar link">📋</button></div></td>'
       +'<td><select class="cell-select" style="min-width:64px" data-pid="'+row._pid+'" data-f="comprou" onchange="updatePendingField(this)"><option>Sim</option><option selected>Não</option></select></td>'
       +'<td><input class="cell-input" style="min-width:86px" data-pid="'+row._pid+'" data-f="notas" placeholder="Anotação..." onblur="updatePendingField(this)"></td>'
+      +'<td style="text-align:center"><span class="modulo-previsto-badge" id="badge_'+row._pid+'" onclick="openModulos(null,\''+row._pid+'\')" >+ Módulos</span></td>'
       +'<td><input class="cell-input" type="number" style="min-width:96px" value="0" data-pid="'+row._pid+'" data-f="fechamento" oninput="updatePendingField(this)" onblur="updatePendingField(this)"></td>'
       +'<td><input class="cell-input" style="min-width:86px" data-pid="'+row._pid+'" data-f="vendedor" onblur="updatePendingField(this)"></td>'
       +'<td style="text-align:center"><button class="boleto-btn" onclick="toggleBoletoPending(this,\''+row._pid+'\')" title="Marcar boleto gerado">⚪</button></td>';
@@ -1673,6 +1747,88 @@ function exportDbExcel(csFilter,segFilter,somenteFeche){
   XLSX.writeFile(wb,'Resultados_'+mesLabel+'_'+csLabel+'_'+segLabel+fechLabel+'_'+new Date().toISOString().slice(0,10)+'.xlsx');
   showToast('Excel exportado — '+allRows.length+' linhas');
   document.getElementById('excelMenu').style.display='none';
+}
+
+// ── MÓDULOS
+let _modulosCurrentId = null;
+let _modulosCurrentPid = null;
+let _modulosSelected = {}; // {rowId_or_pid: [mod_id, ...]}
+
+function openModulos(rowId, pid){
+  _modulosCurrentId = rowId;
+  _modulosCurrentPid = pid;
+  const key = rowId || pid;
+  const selected = _modulosSelected[key] || [];
+  // Get current from allPassagens if existing row
+  let currentMods = selected;
+  if(rowId){
+    const row = allPassagens.find(r=>r.id===rowId);
+    if(row && row.modulos_ids) {
+      try { currentMods = JSON.parse(row.modulos_ids) || []; } catch(e){ currentMods = []; }
+    }
+  }
+  _modulosSelected[key] = [...currentMods];
+  renderModulosBody(currentMods);
+  document.getElementById('modulosModal').classList.add('open');
+  updateModulosTotal();
+}
+
+function closeModulos(){
+  document.getElementById('modulosModal').classList.remove('open');
+}
+
+function renderModulosBody(selected){
+  const body = document.getElementById('modulosBody');
+  body.innerHTML = MODULOS.map(m=>`
+    <div class="modulo-item" onclick="toggleModulo('${m.id}')">
+      <label onclick="event.preventDefault()">
+        <input type="checkbox" id="mod_${m.id}" ${selected.includes(m.id)?'checked':''} onchange="toggleModulo('${m.id}')">
+        <span class="modulo-nome">${m.nome}</span>
+      </label>
+      <span class="modulo-preco">${fmt(m.preco)}</span>
+    </div>`).join('');
+}
+
+function toggleModulo(id){
+  const key = _modulosCurrentId || _modulosCurrentPid;
+  if(!_modulosSelected[key]) _modulosSelected[key] = [];
+  const idx = _modulosSelected[key].indexOf(id);
+  if(idx>=0) _modulosSelected[key].splice(idx,1);
+  else _modulosSelected[key].push(id);
+  const cb = document.getElementById('mod_'+id);
+  if(cb) cb.checked = _modulosSelected[key].includes(id);
+  updateModulosTotal();
+}
+
+function updateModulosTotal(){
+  const key = _modulosCurrentId || _modulosCurrentPid;
+  const selected = _modulosSelected[key] || [];
+  const total = MODULOS.filter(m=>selected.includes(m.id)).reduce((s,m)=>s+m.preco,0);
+  document.getElementById('modulosTotal').textContent = fmt(total);
+}
+
+async function confirmModulos(){
+  const key = _modulosCurrentId || _modulosCurrentPid;
+  const selected = _modulosSelected[key] || [];
+  const total = MODULOS.filter(m=>selected.includes(m.id)).reduce((s,m)=>s+m.preco,0);
+  const modsJson = JSON.stringify(selected);
+
+  if(_modulosCurrentId){
+    // Update existing row
+    const row = allPassagens.find(r=>r.id===_modulosCurrentId);
+    if(row){ row.modulos_ids=modsJson; row.valor_previsto=total; }
+    await sb.from('passagens').update({modulos_ids:modsJson, valor_previsto:total}).eq('id',_modulosCurrentId);
+    renderDBGrid();
+    renderDashboard();
+  } else if(_modulosCurrentPid){
+    // Update pending row
+    const prow = pendingRows.find(r=>r._pid===_modulosCurrentPid);
+    if(prow){ prow.modulos_ids=modsJson; prow.valor_previsto=total; }
+    const badge = document.getElementById('badge_'+_modulosCurrentPid);
+    if(badge) badge.textContent = total>0?fmt(total):'+ Módulos';
+  }
+  closeModulos();
+  showToast(selected.length>0?'✓ '+selected.length+' módulo(s) selecionado(s) — '+fmt(total):'Módulos desmarcados');
 }
 
 // ── BOLETO TOGGLE
