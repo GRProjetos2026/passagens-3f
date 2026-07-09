@@ -718,6 +718,9 @@ const MODULOS = [
   {id:'planejamento', nome:'Planejamento', preco:1099},
   {id:'modulo_ti', nome:'Módulo TI', preco:3000},
   {id:'modulo_ti_parceiro', nome:'Módulo TI Parceiro', preco:999},
+  {id:'creditos_ia_100', nome:'Créditos IA - R$100', preco:100},
+  {id:'creditos_ia_499', nome:'Créditos IA - R$499', preco:499},
+  {id:'creditos_ia_999', nome:'Créditos IA - R$999', preco:999},
 ];
 const TIPO_OPTS=['Renovação','Churn','Risco Churn','Upsell','Antecipação','Aquisição','Outro'];
 const TIPO_COR={Renovação:'#4B9EE8',Churn:'#E05A5A','Risco Churn':'#FF8C42',Upsell:'#3EC99A',Antecipação:'#F0A44A',Aquisição:'#9B7FE8',Outro:'#8892A8'};
@@ -1778,7 +1781,11 @@ function openModulos(rowId, pid){
   if(rowId){
     const row = allPassagens.find(r=>r.id===rowId);
     if(row && row.modulos_ids) {
-      try { currentMods = JSON.parse(row.modulos_ids) || []; } catch(e){ currentMods = []; }
+      try {
+        const parsed = JSON.parse(row.modulos_ids) || [];
+        // Support both old format (string[]) and new format ({id,qty}[])
+        currentMods = parsed.map(p=>typeof p==='string'?{id:p,qty:1}:p);
+      } catch(e){ currentMods = []; }
     }
   }
   _modulosSelected[key] = [...currentMods];
@@ -1793,38 +1800,98 @@ function closeModulos(){
 
 function renderModulosBody(selected){
   const body = document.getElementById('modulosBody');
-  body.innerHTML = MODULOS.map(m=>`
-    <div class="modulo-item" onclick="toggleModulo('${m.id}')">
-      <label onclick="event.preventDefault()">
-        <input type="checkbox" id="mod_${m.id}" ${selected.includes(m.id)?'checked':''} onchange="toggleModulo('${m.id}')">
+  // selected can be array of ids OR array of {id, qty}
+  const getQty = id => {
+    const arr = _modulosSelected[_modulosCurrentId||_modulosCurrentPid]||[];
+    const item = arr.find(s=>(s.id||s)===id);
+    return item ? (item.qty||1) : 0;
+  };
+  body.innerHTML = MODULOS.map(m=>{
+    const qty = getQty(m.id);
+    const isSelected = (_modulosSelected[_modulosCurrentId||_modulosCurrentPid]||[]).some(s=>(s.id||s)===m.id);
+    const checked = isSelected;
+    return `<div class="modulo-item">
+      <label style="flex:1;display:flex;align-items:center;gap:10px;cursor:pointer" onclick="toggleModulo('${m.id}')">
+        <input type="checkbox" id="mod_${m.id}" ${checked?'checked':''} onchange="toggleModulo('${m.id}')" onclick="event.stopPropagation()">
         <span class="modulo-nome">${m.nome}</span>
       </label>
-      <span class="modulo-preco">${fmt(m.preco)}</span>
-    </div>`).join('');
+      <div style="display:flex;align-items:center;gap:8px;flex-shrink:0">
+        <div style="display:flex;align-items:center;gap:4px;background:var(--surface2);border:1px solid var(--border);border-radius:6px;overflow:hidden">
+          <button onclick="event.stopPropagation();changeQty('${m.id}',-1)" style="background:transparent;border:none;color:var(--ink2);cursor:pointer;padding:4px 8px;font-size:14px;line-height:1">−</button>
+          <span id="qty_${m.id}" style="min-width:20px;text-align:center;font-size:13px;color:var(--ink)">${qty||1}</span>
+          <button onclick="event.stopPropagation();changeQty('${m.id}',1)" style="background:transparent;border:none;color:var(--ink2);cursor:pointer;padding:4px 8px;font-size:14px;line-height:1">+</button>
+        </div>
+        <span class="modulo-preco">${fmt(m.preco*(qty||1))}</span>
+      </div>
+    </div>`;
+  }).join('');
 }
 
 function toggleModulo(id){
   const key = _modulosCurrentId || _modulosCurrentPid;
   if(!_modulosSelected[key]) _modulosSelected[key] = [];
-  const idx = _modulosSelected[key].indexOf(id);
-  if(idx>=0) _modulosSelected[key].splice(idx,1);
-  else _modulosSelected[key].push(id);
-  const cb = document.getElementById('mod_'+id);
-  if(cb) cb.checked = _modulosSelected[key].includes(id);
+  const arr = _modulosSelected[key];
+  const idx = arr.findIndex(s=>(s.id||s)===id);
+  if(idx>=0){
+    arr.splice(idx,1);
+    const cb = document.getElementById('mod_'+id);
+    if(cb) cb.checked = false;
+  } else {
+    const qty = parseInt(document.getElementById('qty_'+id)?.textContent)||1;
+    arr.push({id, qty});
+    const cb = document.getElementById('mod_'+id);
+    if(cb) cb.checked = true;
+  }
+  updateModulosTotal();
+}
+
+function changeQty(id, delta){
+  const key = _modulosCurrentId || _modulosCurrentPid;
+  if(!_modulosSelected[key]) _modulosSelected[key] = [];
+  const arr = _modulosSelected[key];
+  const qtyEl = document.getElementById('qty_'+id);
+  let qty = parseInt(qtyEl?.textContent)||1;
+  qty = Math.max(1, qty + delta);
+  if(qtyEl) qtyEl.textContent = qty;
+  // Update selected entry
+  const idx = arr.findIndex(s=>(s.id||s)===id);
+  if(idx>=0){
+    arr[idx] = {id, qty};
+  } else {
+    // Auto-check when changing qty
+    arr.push({id, qty});
+    const cb = document.getElementById('mod_'+id);
+    if(cb) cb.checked = true;
+  }
+  // Update price display
+  const mod = MODULOS.find(m=>m.id===id);
+  if(mod){
+    const priceEl = document.querySelector('#qty_'+id)?.closest('.modulo-item')?.querySelector('.modulo-preco');
+    if(priceEl) priceEl.textContent = fmt(mod.preco * qty);
+  }
   updateModulosTotal();
 }
 
 function updateModulosTotal(){
   const key = _modulosCurrentId || _modulosCurrentPid;
   const selected = _modulosSelected[key] || [];
-  const total = MODULOS.filter(m=>selected.includes(m.id)).reduce((s,m)=>s+m.preco,0);
+  const total = selected.reduce((s,item)=>{
+    const id = item.id||item;
+    const qty = item.qty||1;
+    const mod = MODULOS.find(m=>m.id===id);
+    return s + (mod ? mod.preco*qty : 0);
+  },0);
   document.getElementById('modulosTotal').textContent = fmt(total);
 }
 
 async function confirmModulos(){
   const key = _modulosCurrentId || _modulosCurrentPid;
   const selected = _modulosSelected[key] || [];
-  const total = MODULOS.filter(m=>selected.includes(m.id)).reduce((s,m)=>s+m.preco,0);
+  const total = selected.reduce((s,item)=>{
+    const id=item.id||item; const qty=item.qty||1;
+    const mod=MODULOS.find(m=>m.id===id);
+    return s+(mod?mod.preco*qty:0);
+  },0);
   const modsJson = JSON.stringify(selected);
 
   if(_modulosCurrentId){
