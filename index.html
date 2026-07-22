@@ -704,6 +704,7 @@ const MODULOS = [
   {id:'gbp3', nome:'Gestão de Base Própria (3 Bases)', preco:599},
   {id:'gbp5', nome:'Gestão de Base Própria (5 Bases)', preco:899},
   {id:'orcabim', nome:'OrçaBIM', preco:1199},
+  {id:'orcabim_web', nome:'OrçaBIM Web', preco:1999},
   {id:'of_eletrico', nome:'OF Elétrico', preco:1199},
   {id:'of_hidraulico', nome:'OF Hidráulico', preco:1199},
   {id:'of_estrutural', nome:'OF Estrutural', preco:1199},
@@ -1845,6 +1846,7 @@ function toggleModulo(id){
   updateModulosTotal();
 }
 
+
 function changeQty(id, delta){
   const key = _modulosCurrentId || _modulosCurrentPid;
   if(!_modulosSelected[key]) _modulosSelected[key] = [];
@@ -1853,17 +1855,14 @@ function changeQty(id, delta){
   let qty = parseInt(qtyEl?.textContent)||1;
   qty = Math.max(1, qty + delta);
   if(qtyEl) qtyEl.textContent = qty;
-  // Update selected entry
   const idx = arr.findIndex(s=>(s.id||s)===id);
   if(idx>=0){
-    arr[idx] = {id, qty};
+    arr[idx] = {id,qty};
   } else {
-    // Auto-check when changing qty
-    arr.push({id, qty});
+    arr.push({id,qty});
     const cb = document.getElementById('mod_'+id);
     if(cb) cb.checked = true;
   }
-  // Update price display
   const mod = MODULOS.find(m=>m.id===id);
   if(mod){
     const priceEl = document.querySelector('#qty_'+id)?.closest('.modulo-item')?.querySelector('.modulo-preco');
@@ -1879,7 +1878,8 @@ function updateModulosTotal(){
     const id = item.id||item;
     const qty = item.qty||1;
     const mod = MODULOS.find(m=>m.id===id);
-    return s + (mod ? mod.preco*qty : 0);
+    if(!mod) return s;
+    return s + mod.preco*qty;
   },0);
   document.getElementById('modulosTotal').textContent = fmt(total);
 }
@@ -1890,7 +1890,8 @@ async function confirmModulos(){
   const total = selected.reduce((s,item)=>{
     const id=item.id||item; const qty=item.qty||1;
     const mod=MODULOS.find(m=>m.id===id);
-    return s+(mod?mod.preco*qty:0);
+    if(!mod) return s;
+    return s+mod.preco*qty;
   },0);
   const modsJson = JSON.stringify(selected);
 
