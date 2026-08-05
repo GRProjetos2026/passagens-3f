@@ -490,7 +490,7 @@ footer{margin-top:40px;font-size:12px;color:var(--ink3);text-align:center;paddin
   </div>
 
   <div class="card origem-section" id="modulosSection" style="display:none">
-    <div class="card-title">Módulos mais vendidos (previstos)</div>
+    <div class="card-title">Módulos mais vendidos (fechados, por tipo)</div>
     <div class="chart-wrap" style="height:280px"><canvas id="chartModulos"></canvas></div>
   </div>
 
@@ -1015,19 +1015,26 @@ function aggregateByOrig(rows){
 }
 
 function aggregateModulos(rows){
+  const fechadas=rows.filter(r=>{
+    const f=Number(r.fechamento)||0;
+    return (r.comprou||'').toLowerCase().trim()==='sim'||f>0;
+  });
   const byMod={};
-  rows.forEach(r=>{
+  fechadas.forEach(r=>{
     if(!r.modulos_ids)return;
     let arr;
     try{arr=JSON.parse(r.modulos_ids)||[];}catch(e){arr=[];}
+    if(!arr.length)return;
+    const tipo=normTipo(r.tipo);
     arr.forEach(m=>{
       if(!m||!m.id)return;
       const info=MODULOS.find(x=>x.id===m.id);
       const qty=Number(m.qty)||0;
       if(qty<=0)return;
-      if(!byMod[m.id])byMod[m.id]={id:m.id,nome:info?info.nome:m.id,preco:info?info.preco:0,cor:info?info.cor:'#8892A8',qty:0,passagens:0};
+      if(!byMod[m.id])byMod[m.id]={id:m.id,nome:info?info.nome:m.id,preco:info?info.preco:0,cor:info?info.cor:'#8892A8',qty:0,passagens:0,porTipo:{}};
       byMod[m.id].qty+=qty;
       byMod[m.id].passagens++;
+      byMod[m.id].porTipo[tipo]=(byMod[m.id].porTipo[tipo]||0)+qty;
     });
   });
   return Object.values(byMod).map(d=>Object.assign({},d,{valor:d.qty*d.preco})).sort((a,b)=>b.qty-a.qty);
@@ -1131,15 +1138,19 @@ function initCharts(){
       scales:{x:{grid:{color:gridColor},ticks:{color:tickColor,font:tickFont,callback:v=>'R$ '+v.toLocaleString('pt-BR')}},y:{grid:{display:false},ticks:{color:tickColor,font:tickFont}}}}
   });
   chartModulos=new Chart(document.getElementById('chartModulos'),{
-    type:'bar',data:{labels:[],datasets:[{data:[],backgroundColor:[],borderColor:[],borderWidth:1.5,borderRadius:6,valores:[]}]},
+    type:'bar',data:{labels:[],datasets:[]},
     options:{responsive:true,maintainAspectRatio:false,
-      plugins:{legend:{display:false},tooltip:{callbacks:{label:c=>{
-        const v=(c.dataset.valores||[])[c.dataIndex]||0;
-        return [c.parsed.y+' unidades', fmt(v)];
-      }}}},
+      plugins:{
+        legend:{display:true,position:'bottom',labels:{color:tickColor,font:{size:11,family:'DM Sans'},boxWidth:10,boxHeight:10,padding:12}},
+        tooltip:{callbacks:{label:c=>{
+          if(!c.parsed.y)return null;
+          const v=(c.dataset.valores||[])[c.dataIndex]||0;
+          return c.dataset.label+': '+c.parsed.y+' un · '+fmt(v);
+        }}}
+      },
       scales:{
-        x:{grid:{display:false},ticks:{color:tickColor,font:{size:10,family:'DM Sans'},autoSkip:false,maxRotation:35,minRotation:0}},
-        y:{grid:{color:gridColor},ticks:{color:tickColor,font:tickFont,precision:0}}
+        x:{stacked:true,grid:{display:false},ticks:{color:tickColor,font:{size:10,family:'DM Sans'},autoSkip:false,maxRotation:35,minRotation:0}},
+        y:{stacked:true,grid:{color:gridColor},ticks:{color:tickColor,font:tickFont,precision:0}}
       }}
   });
 }
@@ -1168,7 +1179,7 @@ function renderDashboard(){
     chartPassagens.data.labels=[];chartPassagens.data.datasets[0].data=[];chartPassagens.data.datasets[1].data=[];chartPassagens.update();
     document.getElementById('origemSection').style.display='none';
     document.getElementById('modulosSection').style.display='none';
-    chartModulos.data.labels=[];chartModulos.data.datasets[0].data=[];chartModulos.update();return;
+    chartModulos.data.labels=[];chartModulos.data.datasets=[];chartModulos.update();return;
   }
   const totalPass=data.reduce((s,d)=>s+d.passagens,0),totalFech=data.reduce((s,d)=>s+d.fechamentos,0);
   const totalVal=data.reduce((s,d)=>s+d.valorTotal,0),ticketG=totalFech>0?totalVal/totalFech:0;
@@ -1241,25 +1252,44 @@ function renderDashboard(){
   const modSec=document.getElementById('modulosSection');
   if(!mods.length){
     modSec.style.display='none';
-    chartModulos.data.labels=[];chartModulos.data.datasets[0].data=[];chartModulos.update();
+    chartModulos.data.labels=[];chartModulos.data.datasets=[];chartModulos.update();
   }else{
     modSec.style.display='block';
+    const ordemTipos=['Renovação','Upsell','Churn','Antecipação','Aquisição','Risco Churn','Outro'];
+    const tiposPresentes=[...new Set(mods.flatMap(m=>Object.keys(m.porTipo)))]
+      .sort((a,b)=>ordemTipos.indexOf(a)-ordemTipos.indexOf(b));
     chartModulos.data.labels=mods.map(m=>m.nome);
-    chartModulos.data.datasets[0].data=mods.map(m=>m.qty);
-    chartModulos.data.datasets[0].backgroundColor=mods.map(m=>m.cor+'99');
-    chartModulos.data.datasets[0].borderColor=mods.map(m=>m.cor);
-    chartModulos.data.datasets[0].valores=mods.map(m=>m.valor);
+    chartModulos.data.datasets=tiposPresentes.map(tipo=>{
+      const cor=TIPO_COR[tipo]||'#8892A8';
+      return {
+        label:tipo,
+        data:mods.map(m=>m.porTipo[tipo]||0),
+        backgroundColor:cor+'CC',
+        borderColor:cor,
+        borderWidth:1.5,
+        borderRadius:4,
+        stack:'modulos',
+        valores:mods.map(m=>(m.porTipo[tipo]||0)*m.preco)
+      };
+    });
     chartModulos.update();
   }
 }
 
 // ── PAINEL DB
+function resetDbVer(){
+  _dbVer='mes';
+  document.querySelectorAll('#dbVerTodos,#dbVerMes,#dbVerRetro').forEach(b=>b.classList.remove('active'));
+  const el=document.getElementById('dbVerMes');if(el)el.classList.add('active');
+}
+
 function togglePanel(){
   const panel=document.getElementById('dbPanel'),btn=document.getElementById('btnDB');
   const open=panel.classList.contains('open');
   if(open){panel.classList.remove('open');document.body.classList.remove('panel-open');btn.classList.remove('active');}
   else{
     _dbMes = _mesAtivo || MESES_KEYS.slice().reverse().find(k=>hasMesData(k)) || _dbMes;
+    resetDbVer();
     panel.classList.add('open');document.body.classList.add('panel-open');btn.classList.add('active');buildPanelMonthTabs();renderPanelContent();
   }
 }
@@ -1268,7 +1298,7 @@ function buildPanelMonthTabs(){
   const tabs=document.getElementById('panelMonthTabs');tabs.innerHTML='';
   MESES_KEYS.forEach(k=>{
     const t=document.createElement('div');t.className='panel-month-tab'+(k===_dbMes?' active':'');
-    t.textContent=MESES_LABELS[k];t.onclick=()=>{_dbMes=k;buildPanelMonthTabs();renderPanelContent();};tabs.appendChild(t);
+    t.textContent=MESES_LABELS[k];t.onclick=()=>{_dbMes=k;resetDbVer();buildPanelMonthTabs();renderPanelContent();};tabs.appendChild(t);
   });
 }
 
@@ -1304,6 +1334,18 @@ function getDbRows(){
 
 function esc(s){return String(s||'').replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/</g,'&lt;');}
 
+function autoCompletarAno(str){
+  if(!str)return str;
+  const s=str.trim();
+  const m=s.match(/^(\d{1,2})[\/\-](\d{1,2})$/);
+  if(m){
+    const dd=m[1].padStart(2,'0');
+    const mm=m[2].padStart(2,'0');
+    return dd+'/'+mm+'/2026';
+  }
+  return s;
+}
+
 function parseBRL(str){
   if(str===undefined||str===null||str==='')return 0;
   const clean=String(str).replace(/R\$\s*/gi,'').replace(/\./g,'').replace(',','.').trim();
@@ -1323,6 +1365,14 @@ function onFechamentoBlur(el,pending){
   if(pending)updatePendingField(el);else updateRow(el);
   const raw=parseBRL(el.value);
   el.value=raw>0?fmtBRLInput(raw):'';
+  if(raw>0){
+    const tr=el.closest('tr');
+    const compSel=tr?tr.querySelector('select[data-f="comprou"]'):null;
+    if(compSel&&compSel.value!=='Sim'){
+      compSel.value='Sim';
+      if(pending)updatePendingField(compSel);else updateRow(compSel);
+    }
+  }
 }
 
 function renderDBGrid(){
@@ -1347,7 +1397,9 @@ function renderDBGrid(){
     tr.dataset.id=row.id||'';
     const tipoOpts=TIPO_OPTS.map(o=>'<option'+(normTipo(row.tipo)===o?' selected':'')+'>'+o+'</option>').join('');
     const compSim=(row.comprou||'Não')==='Sim';
-    const origOpts=['','Suporte','SDR','Campanha','Busca Ativa','Outro'].map(o=>'<option value="'+o+'"'+(( row.orig||'')=== o?' selected':'')+'>'+o+'</option>').join('');
+    const origBase=['','Suporte','Campanha','Busca Ativa','Outro'];
+    const origList=(row.orig==='SDR')?origBase.concat('SDR'):origBase;
+    const origOpts=origList.map(o=>'<option value="'+o+'"'+(( row.orig||'')=== o?' selected':'')+'>'+o+'</option>').join('');
     const fechVal=Number(row.fechamento)||0;
     tr.innerHTML='<td><input type="checkbox" class="row-check" onchange="rowCheck(this)"></td>'
       +'<td><select class="cell-select" style="min-width:100px" data-f="orig" data-id="'+esc(row.id)+'" onchange="updateRow(this)">'+origOpts+'</select></td>'
@@ -1376,7 +1428,7 @@ function renderDBGrid(){
     tr.classList.add('new-row');
     tr.dataset.pendingId=row._pid;
     const tipoOpts2=TIPO_OPTS.map(o=>'<option'+(o==='Renovação'?' selected':'')+'>'+o+'</option>').join('');
-    const origOpts2=['','Suporte','SDR','Campanha','Busca Ativa','Outro'].map(o=>'<option value="'+o+'">'+o+'</option>').join('');
+    const origOpts2=['','Suporte','Campanha','Busca Ativa','Outro'].map(o=>'<option value="'+o+'">'+o+'</option>').join('');
     tr.innerHTML='<td><input type="checkbox" class="row-check" onchange="rowCheck(this)"></td>'
       +'<td><select class="cell-select" style="min-width:100px" data-pid="'+row._pid+'" data-f="orig" onchange="updatePendingField(this)">'+origOpts2+'</select></td>'
       +'<td><input class="cell-input" style="min-width:84px" data-pid="'+row._pid+'" data-f="data_envio" onblur="updatePendingField(this)"></td>'
@@ -1432,6 +1484,9 @@ function updatePendingField(el){
   if(!row)return;
   if(f==='fechamento'){
     row.fechamento=parseBRL(el.value);
+  } else if(f==='data_envio'||f==='data_pag'){
+    el.value=autoCompletarAno(el.value);
+    row[f]=el.value;
   } else {
     row[f]=el.value;
   }
@@ -1907,6 +1962,7 @@ function debugDates(tipo){
 async function updateRow(el){
   const id=el.dataset.id;if(!id)return;
   const field=el.dataset.f;
+  if(field==='data_envio'||field==='data_pag'){el.value=autoCompletarAno(el.value);}
   const val=field==='fechamento'?parseBRL(el.value):el.value;
   // Update local immediately
   const row=allPassagens.find(r=>r.id===id);
