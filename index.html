@@ -216,14 +216,11 @@ footer{margin-top:40px;font-size:12px;color:var(--ink3);text-align:center;paddin
 /* ── PAINEL DB ── */
 #dbPanel{position:fixed;top:0;right:0;bottom:0;width:var(--panel-w);background:#111620;border-left:1px solid var(--border2);display:flex;flex-direction:column;transform:translateX(100%);transition:transform .35s cubic-bezier(.4,0,.2,1);z-index:60;overflow:hidden}
 #dbPanel.open{transform:translateX(0)}
-.panel-header{padding:16px 24px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;flex-shrink:0}
+.panel-header{padding:16px 24px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;flex-shrink:0;background:rgba(255,255,255,.02)}
 .panel-title{font-size:13px;font-weight:500;color:var(--ink);display:flex;align-items:center;gap:8px}
 .panel-close{width:28px;height:28px;border-radius:6px;border:1px solid var(--border);background:transparent;color:var(--ink2);font-size:16px;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all .15s}
 .panel-close:hover{background:var(--surface2);color:var(--ink)}
-.panel-main-tabs{display:flex;border-bottom:1px solid var(--border);flex-shrink:0;padding:0 16px}
-.panel-main-tab{padding:10px 14px;font-size:12px;color:var(--ink3);cursor:pointer;border-bottom:2px solid transparent;transition:all .15s;white-space:nowrap}
-.panel-main-tab:hover{color:var(--ink2)}
-.panel-main-tab.active{color:var(--renov);border-bottom-color:var(--renov)}
+
 .panel-month-tabs{display:flex;border-bottom:1px solid var(--border);flex-shrink:0;padding:0 12px;overflow-x:auto}
 .panel-month-tabs::-webkit-scrollbar{height:0}
 .panel-month-tab{padding:8px 14px;font-size:12px;color:var(--ink3);cursor:pointer;border-bottom:2px solid transparent;transition:all .15s;white-space:nowrap;flex-shrink:0}
@@ -245,7 +242,8 @@ footer{margin-top:40px;font-size:12px;color:var(--ink3);text-align:center;paddin
 .db-search::placeholder{color:var(--ink3)}
 .db-search-clear{position:absolute;right:6px;background:transparent;border:none;color:var(--ink3);cursor:pointer;font-size:12px;padding:2px 5px;border-radius:4px;line-height:1}
 .db-search-clear:hover{color:var(--ink);background:var(--surface3)}
-.btn-sm{padding:6px 12px;border-radius:6px;font-family:'DM Sans',sans-serif;font-size:12px;cursor:pointer;transition:all .15s;display:inline-flex;align-items:center;gap:4px;white-space:nowrap;border:none}
+.btn-sm{padding:6px 12px;border-radius:8px;font-family:'DM Sans',sans-serif;font-size:12px;cursor:pointer;transition:all .15s;display:inline-flex;align-items:center;gap:4px;white-space:nowrap;border:none}
+.btn-sm:hover{filter:brightness(1.15)}
 .btn-add{background:var(--renov);color:#fff;font-weight:500}.btn-add:hover{opacity:.85}
 .btn-del{border:1px solid rgba(224,90,90,.3)!important;background:transparent;color:var(--churn)}.btn-del:hover{background:rgba(224,90,90,.1)}
 .btn-save-row{border:1px solid var(--border2)!important;background:transparent;color:var(--ink2)}.btn-save-row:hover{background:var(--surface2);color:var(--ink)}
@@ -256,7 +254,9 @@ footer{margin-top:40px;font-size:12px;color:var(--ink3);text-align:center;paddin
 .db-table{border-collapse:collapse;font-size:12px;min-width:100%}
 .db-table th{position:sticky;top:0;z-index:5;background:#111620;color:var(--ink3);font-size:10px;font-weight:500;text-transform:uppercase;letter-spacing:.07em;padding:8px 6px;border-bottom:1px solid var(--border2);white-space:nowrap;text-align:left;user-select:none}
 .db-table th:first-child{width:32px;text-align:center}
-.db-table td{padding:2px 2px;border-bottom:1px solid rgba(255,255,255,.04);vertical-align:middle}
+.db-table td{padding:8px 7px;border-bottom:1px solid rgba(255,255,255,.05);vertical-align:middle}
+.db-table tbody tr{transition:background .12s}
+.db-table tbody tr:nth-child(even) td{background:rgba(255,255,255,.014)}
 .db-table td:first-child{text-align:center;color:var(--ink3);width:32px}
 .db-table tr.selected td{background:rgba(75,158,232,.08)}
 .db-table tr:hover td{background:rgba(255,255,255,.03)}
@@ -267,14 +267,9 @@ footer{margin-top:40px;font-size:12px;color:var(--ink3);text-align:center;paddin
 .cell-select:focus{background:var(--surface3)}
 .cell-select option{background:#1E2438;color:var(--ink)}
 .row-check{width:14px;height:14px;cursor:pointer;accent-color:var(--renov)}
-.boleto-btn{background:transparent;border:none;cursor:pointer;font-size:16px;padding:4px;border-radius:4px;transition:transform .15s;line-height:1}
-.boleto-btn:hover{transform:scale(1.2)}
-.boleto-btn.boleto-ativo{filter:drop-shadow(0 0 4px #4B9EE8)}
-.reg-badge{display:inline-flex;align-items:center;gap:4px;padding:4px 9px;border-radius:99px;font-size:10.5px;font-weight:500;cursor:pointer;transition:all .15s;white-space:nowrap}
-.reg-badge.reg-mes{background:rgba(75,158,232,.15);color:var(--renov)}
-.reg-badge.reg-mes:hover{background:rgba(75,158,232,.25)}
-.reg-badge.reg-retro{background:rgba(240,164,74,.15);color:var(--antec)}
-.reg-badge.reg-retro:hover{background:rgba(240,164,74,.25)}
+.reg-select{border-radius:8px!important;font-weight:500;font-size:11.5px!important;text-align:center;text-align-last:center;cursor:pointer;padding:6px 8px!important}
+.reg-select.reg-select-mes{background:rgba(75,158,232,.15)!important;color:var(--renov)!important;border-color:rgba(75,158,232,.3)!important}
+.reg-select.reg-select-retro{background:rgba(240,164,74,.15)!important;color:var(--antec)!important;border-color:rgba(240,164,74,.3)!important}
 .db-table tr.retro-row td:first-child{box-shadow:inset 3px 0 0 var(--antec)}
 .excel-opt{padding:8px 14px;font-size:12px;color:var(--ink2);cursor:pointer;transition:background .15s;white-space:nowrap}
 .excel-opt:hover{background:var(--surface3);color:var(--ink)}
@@ -456,13 +451,13 @@ footer{margin-top:40px;font-size:12px;color:var(--ink3);text-align:center;paddin
     <button class="month-btn" id="verRetro" onclick="selectVer('retro')">Retroativo</button>
   </div>
 
-  <div class="kpi-row" style="grid-template-columns:repeat(6,1fr)">
-    <div class="kpi"><div class="kpi-label">Total de passagens</div><div class="kpi-value" id="kpiPass">—</div><div class="kpi-sub" id="kpiPassSub">—</div></div>
-    <div class="kpi"><div class="kpi-label">Valor total previsto</div><div class="kpi-value" id="kpiPrevisto">—</div><div class="kpi-sub" id="kpiPrevistoSub">—</div></div>
-    <div class="kpi"><div class="kpi-label">Passagens fechadas</div><div class="kpi-value" id="kpiFechadas">—</div><div class="kpi-sub" id="kpiFechadasSub">—</div></div>
-    <div class="kpi"><div class="kpi-label">Valor total fechado</div><div class="kpi-value" id="kpiVal">—</div><div class="kpi-sub" id="kpiValSub">—</div></div>
-    <div class="kpi"><div class="kpi-label">Taxa de fechamento</div><div class="kpi-value" id="kpiTaxa">—</div><div class="kpi-sub" id="kpiTaxaSub">—</div></div>
-    <div class="kpi"><div class="kpi-label">Previsto vs Realizado</div><div class="kpi-value" id="kpiPrevReal">—</div><div class="kpi-sub" id="kpiPrevRealSub">—</div></div>
+  <div class="kpi-row" id="kpiRow" style="grid-template-columns:repeat(6,1fr)">
+    <div class="kpi" id="kpiCardPass"><div class="kpi-label">Total de passagens</div><div class="kpi-value" id="kpiPass">—</div><div class="kpi-sub" id="kpiPassSub">—</div></div>
+    <div class="kpi" id="kpiCardPrevisto"><div class="kpi-label">Valor total previsto</div><div class="kpi-value" id="kpiPrevisto">—</div><div class="kpi-sub" id="kpiPrevistoSub">—</div></div>
+    <div class="kpi" id="kpiCardFechadas"><div class="kpi-label">Passagens fechadas</div><div class="kpi-value" id="kpiFechadas">—</div><div class="kpi-sub" id="kpiFechadasSub">—</div></div>
+    <div class="kpi" id="kpiCardVal"><div class="kpi-label">Valor total fechado</div><div class="kpi-value" id="kpiVal">—</div><div class="kpi-sub" id="kpiValSub">—</div></div>
+    <div class="kpi" id="kpiCardTaxa"><div class="kpi-label">Taxa de fechamento</div><div class="kpi-value" id="kpiTaxa">—</div><div class="kpi-sub" id="kpiTaxaSub">—</div></div>
+    <div class="kpi" id="kpiCardPrevReal"><div class="kpi-label">Previsto vs Realizado</div><div class="kpi-value" id="kpiPrevReal">—</div><div class="kpi-sub" id="kpiPrevRealSub">—</div></div>
   </div>
 
   <div class="charts-grid">
@@ -496,7 +491,7 @@ footer{margin-top:40px;font-size:12px;color:var(--ink3);text-align:center;paddin
 
   <div class="card origem-section" id="modulosSection" style="display:none">
     <div class="card-title">Módulos mais vendidos (previstos)</div>
-    <div class="origem-grid" id="modulosGrid"></div>
+    <div class="chart-wrap" style="height:280px"><canvas id="chartModulos"></canvas></div>
   </div>
 
   <!-- HISTÓRICO VIEW -->
@@ -627,10 +622,6 @@ footer{margin-top:40px;font-size:12px;color:var(--ink3);text-align:center;paddin
     </div>
     <button class="panel-close" onclick="togglePanel()">✕</button>
   </div>
-  <div class="panel-main-tabs">
-    <div class="panel-main-tab active" id="ptabDados" onclick="switchMainTab('dados')">📋 Resultados</div>
-    <div class="panel-main-tab" id="ptabOrigens" onclick="switchMainTab('origens')">📍 Origens</div>
-  </div>
   <div class="panel-month-tabs" id="panelMonthTabs"></div>
   <div class="cs-tabs" id="csTabs">
     <button class="cs-tab active" id="csGabriel" onclick="switchCS('gabriel')">Gabriel</button>
@@ -710,13 +701,11 @@ footer{margin-top:40px;font-size:12px;color:var(--ink3);text-align:center;paddin
         <th style="min-width:110px">Módulos/Previsto</th>
         <th style="min-width:110px">Fechamento</th>
         <th style="min-width:88px">Vendedor</th>
-        <th style="min-width:60px">Boleto</th>
-        <th style="min-width:100px">Registro</th>
+        <th style="min-width:120px">Registro</th>
       </tr></thead>
       <tbody id="dbBody"></tbody>
     </table>
   </div>
-  <div class="origem-panel-wrap" id="origensPanelBody" style="display:none"></div>
   <div class="panel-footer">
     <span class="paste-hint">💡 Ctrl+V para colar do Excel · alterações salvas automaticamente</span>
     <button class="save-btn" id="saveAllBtn" onclick="saveAllPending()">
@@ -812,9 +801,9 @@ const TIPO_COR={Renovação:'#4B9EE8',Churn:'#E05A5A','Risco Churn':'#FF8C42',Up
 let currentUser=null, currentPerfil=null;
 let allPassagens=[];
 let pendingRows=[];
-let _mesAtivo=null,_segAtivo='geral',_verAtivo='geral',_dbMes='abril',_dbCS='gabriel',_dbSeg='b2b',_dbVer='mes',_panelMainTab='dados';
+let _mesAtivo=null,_segAtivo='geral',_verAtivo='geral',_dbMes='abril',_dbCS='gabriel',_dbSeg='b2b',_dbVer='mes';
 let realtimeSub=null;
-let chartPassagens,chartDonut,chartTicket,chartHistDonut,chartHistFech,chartRoiPct,chartRoiValor,chartRoiMes;
+let chartPassagens,chartDonut,chartTicket,chartHistDonut,chartHistFech,chartRoiPct,chartRoiValor,chartRoiMes,chartModulos;
 
 const fmt=v=>'R$ '+Math.round(v).toLocaleString('pt-BR');
 const fmtK=v=>v>=1000?'R$ '+Math.round(v/1000)+'k':fmt(v);
@@ -1141,6 +1130,15 @@ function initCharts(){
       plugins:{legend:{display:false},tooltip:{callbacks:{label:c=>'R$ '+c.parsed.x.toLocaleString('pt-BR')}}},
       scales:{x:{grid:{color:gridColor},ticks:{color:tickColor,font:tickFont,callback:v=>'R$ '+v.toLocaleString('pt-BR')}},y:{grid:{display:false},ticks:{color:tickColor,font:tickFont}}}}
   });
+  chartModulos=new Chart(document.getElementById('chartModulos'),{
+    type:'bar',data:{labels:[],datasets:[{data:[],backgroundColor:'rgba(155,127,232,0.55)',borderColor:'#9B7FE8',borderWidth:1.5,borderRadius:6}]},
+    options:{responsive:true,maintainAspectRatio:false,
+      plugins:{legend:{display:false},tooltip:{callbacks:{label:c=>c.parsed.y+' unidades'}}},
+      scales:{
+        x:{grid:{display:false},ticks:{color:tickColor,font:{size:10,family:'DM Sans'},autoSkip:false,maxRotation:35,minRotation:0}},
+        y:{grid:{color:gridColor},ticks:{color:tickColor,font:tickFont,precision:0}}
+      }}
+  });
 }
 
 function renderDashboard(){
@@ -1152,6 +1150,11 @@ function renderDashboard(){
   const splitMap={};splitData.forEach(d=>splitMap[d.tipo]=d);
   const passMesTotal=allRows.filter(r=>!r.retroativo).length;
   const passRetroTotal=allRows.filter(r=>r.retroativo).length;
+  const soRetro=_verAtivo==='retro';
+  document.getElementById('kpiRow').style.gridTemplateColumns=soRetro?'repeat(2,1fr)':'repeat(6,1fr)';
+  ['kpiCardPrevisto','kpiCardFechadas','kpiCardTaxa','kpiCardPrevReal'].forEach(id=>{
+    document.getElementById(id).style.display=soRetro?'none':'';
+  });
   if(!data.length){
     ['kpiPass','kpiVal','kpiTicket','kpiTaxa'].forEach(id=>document.getElementById(id).textContent='—');
     document.getElementById('kpiPassSub').textContent='Sem passagens neste filtro';
@@ -1161,7 +1164,8 @@ function renderDashboard(){
     [chartDonut,chartTicket].forEach(c=>{c.data.labels=[];c.data.datasets[0].data=[];c.update();});
     chartPassagens.data.labels=[];chartPassagens.data.datasets[0].data=[];chartPassagens.data.datasets[1].data=[];chartPassagens.update();
     document.getElementById('origemSection').style.display='none';
-    document.getElementById('modulosSection').style.display='none';return;
+    document.getElementById('modulosSection').style.display='none';
+    chartModulos.data.labels=[];chartModulos.data.datasets[0].data=[];chartModulos.update();return;
   }
   const totalPass=data.reduce((s,d)=>s+d.passagens,0),totalFech=data.reduce((s,d)=>s+d.fechamentos,0);
   const totalVal=data.reduce((s,d)=>s+d.valorTotal,0),ticketG=totalFech>0?totalVal/totalFech:0;
@@ -1224,7 +1228,7 @@ function renderDashboard(){
   chartTicket.data.datasets[0].backgroundColor=td.map(d=>d.cor+'55');chartTicket.data.datasets[0].borderColor=td.map(d=>d.cor);chartTicket.update();
   const origs=aggregateByOrig(rows).filter(o=>o.orig!=='Não informado');
   const sec=document.getElementById('origemSection');
-  if(!origs.length){
+  if(soRetro||!origs.length){
     sec.style.display='none';
   }else{
     sec.style.display='block';
@@ -1234,9 +1238,12 @@ function renderDashboard(){
   const modSec=document.getElementById('modulosSection');
   if(!mods.length){
     modSec.style.display='none';
+    chartModulos.data.labels=[];chartModulos.data.datasets[0].data=[];chartModulos.update();
   }else{
     modSec.style.display='block';
-    document.getElementById('modulosGrid').innerHTML=mods.map(m=>'<div class="orig-card"><div class="orig-card-name">'+m.nome+'</div><div class="orig-card-taxa">'+m.qty+'</div><div class="orig-card-sub">'+m.passagens+' passagens · '+fmt(m.preco)+'/un</div><div class="orig-card-val">'+fmt(m.valor)+'</div></div>').join('');
+    chartModulos.data.labels=mods.map(m=>m.nome);
+    chartModulos.data.datasets[0].data=mods.map(m=>m.qty);
+    chartModulos.update();
   }
 }
 
@@ -1245,20 +1252,10 @@ function togglePanel(){
   const panel=document.getElementById('dbPanel'),btn=document.getElementById('btnDB');
   const open=panel.classList.contains('open');
   if(open){panel.classList.remove('open');document.body.classList.remove('panel-open');btn.classList.remove('active');}
-  else{panel.classList.add('open');document.body.classList.add('panel-open');btn.classList.add('active');buildPanelMonthTabs();renderPanelContent();}
-}
-
-function switchMainTab(tab){
-  _panelMainTab=tab;
-  document.getElementById('ptabDados').classList.toggle('active',tab==='dados');
-  document.getElementById('ptabOrigens').classList.toggle('active',tab==='origens');
-  const sd=tab==='dados';
-  document.getElementById('csTabs').style.display=sd?'flex':'none';
-  document.getElementById('segTabsRow').style.display=sd?'flex':'none';
-  document.querySelector('.db-toolbar').style.display=sd?'flex':'none';
-  document.getElementById('dbGridWrap').style.display=sd?'block':'none';
-  document.getElementById('origensPanelBody').style.display=sd?'none':'block';
-  renderPanelContent();
+  else{
+    _dbMes = _mesAtivo || MESES_KEYS.slice().reverse().find(k=>hasMesData(k)) || _dbMes;
+    panel.classList.add('open');document.body.classList.add('panel-open');btn.classList.add('active');buildPanelMonthTabs();renderPanelContent();
+  }
 }
 
 function buildPanelMonthTabs(){
@@ -1280,7 +1277,7 @@ function switchDbSeg(seg){
   const el=document.getElementById('dbSeg'+seg.charAt(0).toUpperCase()+seg.slice(1));if(el)el.classList.add('active');
   renderPanelContent();
 }
-function renderPanelContent(){if(_panelMainTab==='dados')renderDBGrid();else renderOrigensPanel();}
+function renderPanelContent(){renderDBGrid();}
 
 function selectDbVer(v){
   _dbVer=v;
@@ -1329,17 +1326,15 @@ function renderDBGrid(){
       +'<td><select class="cell-select" style="min-width:100px" data-f="orig" data-id="'+esc(row.id)+'" onchange="updateRow(this)">'+origOpts+'</select></td>'
       +'<td><input class="cell-input" style="min-width:84px" value="'+esc(row.data_envio||'')+'" data-f="data_envio" data-id="'+esc(row.id)+'" onblur="updateRow(this)"></td>'
       +'<td><input class="cell-input" style="min-width:84px" value="'+esc(row.data_pag||'')+'" data-f="data_pag" data-id="'+esc(row.id)+'" onblur="updateRow(this)"></td>'
-      +'<td><select class="cell-select" style="min-width:106px" data-f="tipo" data-id="'+esc(row.id)+'" onchange="updateRow(this)">'+tipoOpts+'</select></td>'
+      +'<td><select class="cell-select" style="min-width:106px;border-left:3px solid '+corTipo(row.tipo)+'" data-f="tipo" data-id="'+esc(row.id)+'" onchange="this.style.borderLeftColor=corTipo(this.value);updateRow(this)">'+tipoOpts+'</select></td>'
       +'<td><div class="link-cell"><input class="cell-input" style="min-width:150px" value="'+esc(row.link||'')+'" data-f="link" data-id="'+esc(row.id)+'" onblur="checkDupLink(this);updateRow(this)" title="'+esc(row.link||'')+'"><button class="copy-btn" onclick="copyLink(this)" title="Copiar link">📋</button></div></td>'
       +'<td><select class="cell-select" style="min-width:64px" data-f="comprou" data-id="'+esc(row.id)+'" onchange="updateRow(this)"><option'+(compSim?' selected':'')+'>Sim</option><option'+(!compSim?' selected':'')+'>Não</option></select></td>'
       +'<td><input class="cell-input" style="min-width:86px" value="'+esc(row.notas||'')+'" data-f="notas" data-id="'+esc(row.id)+'" onblur="updateRow(this)" placeholder="Anotação..."></td>'
       +'<td style="text-align:center"><span class="modulo-previsto-badge" onclick="openModulos(\''+esc(row.id)+'\',null)">'+(row.valor_previsto>0?fmt(row.valor_previsto):'+ Módulos')+'</span></td>'
       +'<td><input class="cell-input" type="number" style="min-width:96px" value="'+fechVal+'" data-f="fechamento" data-id="'+esc(row.id)+'" onblur="updateRow(this)"></td>'
       +'<td><input class="cell-input" style="min-width:86px" value="'+esc(row.vendedor||'')+'" data-f="vendedor" data-id="'+esc(row.id)+'" onblur="updateRow(this)"></td>'
-      +'<td style="text-align:center"><button class="boleto-btn'+(row.boleto?'  boleto-ativo':'')+'" onclick="toggleBoleto(this,\''+esc(row.id)+'\')" title="'+(row.boleto?'Boleto gerado':'Marcar boleto gerado')+'">'+(row.boleto?'🔵':'⚪')+'</button></td>'
-      +'<td style="text-align:center"><span class="reg-badge '+(row.retroativo?'reg-retro':'reg-mes')+'" onclick="toggleRegistro(\''+esc(row.id)+'\')" title="Clique para alternar">'+(row.retroativo?'↩️ Retroativo':'📅 Do mês')+'</span></td>';
+      +'<td><select class="cell-select reg-select '+(row.retroativo?'reg-select-retro':'reg-select-mes')+'" data-id="'+esc(row.id)+'" onchange="updateRegistro(this)"><option value="mes"'+(!row.retroativo?' selected':'')+'>📅 Do mês</option><option value="retro"'+(row.retroativo?' selected':'')+'>↩️ Retroativo</option></select></td>';
     tbody.appendChild(tr);
-    if(row.boleto) tr.classList.add('boleto-row');
     if(row.retroativo) tr.classList.add('retro-row');
   });
 
@@ -1359,15 +1354,14 @@ function renderDBGrid(){
       +'<td><select class="cell-select" style="min-width:100px" data-pid="'+row._pid+'" data-f="orig" onchange="updatePendingField(this)">'+origOpts2+'</select></td>'
       +'<td><input class="cell-input" style="min-width:84px" data-pid="'+row._pid+'" data-f="data_envio" onblur="updatePendingField(this)"></td>'
       +'<td><input class="cell-input" style="min-width:84px" data-pid="'+row._pid+'" data-f="data_pag" onblur="updatePendingField(this)"></td>'
-      +'<td><select class="cell-select" style="min-width:106px" data-pid="'+row._pid+'" data-f="tipo" onchange="updatePendingField(this)">'+tipoOpts2+'</select></td>'
+      +'<td><select class="cell-select" style="min-width:106px;border-left:3px solid '+corTipo(row.tipo||'Renovação')+'" data-pid="'+row._pid+'" data-f="tipo" onchange="this.style.borderLeftColor=corTipo(this.value);updatePendingField(this)">'+tipoOpts2+'</select></td>'
       +'<td><div class="link-cell"><input class="cell-input" style="min-width:150px" data-pid="'+row._pid+'" data-f="link" onblur="checkDupLink(this);updatePendingField(this)"><button class="copy-btn" onclick="copyLink(this)" title="Copiar link">📋</button></div></td>'
       +'<td><select class="cell-select" style="min-width:64px" data-pid="'+row._pid+'" data-f="comprou" onchange="updatePendingField(this)"><option>Sim</option><option selected>Não</option></select></td>'
       +'<td><input class="cell-input" style="min-width:86px" data-pid="'+row._pid+'" data-f="notas" placeholder="Anotação..." onblur="updatePendingField(this)"></td>'
       +'<td><input class="cell-input" type="number" style="min-width:96px" value="0" data-pid="'+row._pid+'" data-f="fechamento" oninput="updatePendingField(this)" onblur="updatePendingField(this)"></td>'
       +'<td style="text-align:center"><span class="modulo-previsto-badge" id="badge_'+row._pid+'" onclick="openModulos(null,\''+row._pid+'\')" >+ Módulos</span></td>'
       +'<td><input class="cell-input" style="min-width:86px" data-pid="'+row._pid+'" data-f="vendedor" onblur="updatePendingField(this)"></td>'
-      +'<td style="text-align:center"><button class="boleto-btn" onclick="toggleBoletoPending(this,\''+row._pid+'\')" title="Marcar boleto gerado">⚪</button></td>'
-      +'<td style="text-align:center"><span class="reg-badge '+(row.retroativo?'reg-retro':'reg-mes')+'" onclick="toggleRegistroPending(\''+row._pid+'\')" title="Clique para alternar">'+(row.retroativo?'↩️ Retroativo':'📅 Do mês')+'</span></td>';
+      +'<td><select class="cell-select reg-select '+(row.retroativo?'reg-select-retro':'reg-select-mes')+'" data-pid="'+row._pid+'" onchange="updateRegistroPending(this)"><option value="mes"'+(!row.retroativo?' selected':'')+'>📅 Do mês</option><option value="retro"'+(row.retroativo?' selected':'')+'>↩️ Retroativo</option></select></td>';
     tbody.appendChild(tr);
     if(row.retroativo) tr.classList.add('retro-row');
   });
@@ -1396,12 +1390,6 @@ function markDupRows(){
       tr.classList.add('dup-link');
     } else {
       tr.classList.remove('dup-link');
-    }
-    // Preserve boleto-row class based on data
-    const tid=tr.dataset.id;
-    if(tid){
-      const rr=allPassagens.find(x=>x.id===tid);
-      if(rr&&rr.boleto) tr.classList.add('boleto-row');
     }
   });
 }
@@ -1516,17 +1504,6 @@ function pFech(v){if(!v)return 0;const c=v.replace(/[R$\s\.]/g,'').replace(',','
 function pComp(v){if(!v)return'Não';return v.trim().toLowerCase()==='sim'?'Sim':'Não';}
 
 // ── ORIGENS PANEL
-function renderOrigensPanel(){
-  const body=document.getElementById('origensPanelBody');
-  const rows=allPassagens.filter(r=>r.mes===_dbMes);
-  const origs=aggregateByOrig(rows);
-  if(!origs.length||origs.every(o=>o.orig==='Não informado')){
-    body.innerHTML='<div class="orig-no-data">Nenhuma origem cadastrada para este mês.<br><br>A partir de Maio, preencha a coluna <strong>Origem</strong> e os dados aparecerão aqui automaticamente.</div>';return;
-  }
-  const cards=origs.filter(o=>o.orig!=='Não informado').map(o=>'<div class="orig-stat-card"><div class="orig-stat-name">'+o.orig+'</div><div class="orig-stat-taxa">'+o.taxa+'%</div><div class="orig-stat-detail">'+o.fechamentos+' fechamentos · '+o.passagens+' passagens</div><div class="orig-stat-val">'+fmt(o.valorTotal)+'</div></div>').join('');
-  const rows2=origs.map(o=>'<tr><td style="font-weight:500">'+o.orig+'</td><td>'+o.passagens+'</td><td>'+o.fechamentos+'</td><td>'+o.taxa+'%</td><td>'+fmt(o.valorTotal)+'</td><td>'+(o.ticket>0?fmt(o.ticket):'—')+'</td></tr>').join('');
-  body.innerHTML='<div class="orig-stats-grid">'+cards+'</div><table class="orig-table"><thead><tr><th>Origem</th><th>Passagens</th><th>Fechamentos</th><th>Taxa</th><th>Valor total</th><th>Ticket médio</th></tr></thead><tbody>'+rows2+'</tbody></table>';
-}
 
 // ── EXPORT
 function exportPDF(){
@@ -2138,40 +2115,20 @@ async function confirmModulos(){
 }
 
 // ── BOLETO TOGGLE
-async function toggleBoleto(btn, id){
-  const tr=btn.closest('tr');
+async function updateRegistro(el){
+  const id=el.dataset.id;
   const row=allPassagens.find(r=>r.id===id);
   if(!row)return;
-  row.boleto=!row.boleto;
-  btn.textContent=row.boleto?'🔵':'⚪';
-  btn.title=row.boleto?'Boleto gerado':'Marcar boleto gerado';
-  btn.classList.toggle('boleto-ativo',row.boleto);
-  tr.classList.toggle('boleto-row',row.boleto);
-  await sb.from('passagens').update({boleto:row.boleto}).eq('id',id);
-  showToast(row.boleto?'🔵 Boleto marcado':'⚪ Boleto desmarcado');
-}
-function toggleBoletoPending(btn, pid){
-  const tr=btn.closest('tr');
-  const row=pendingRows.find(r=>r._pid===pid);
-  if(!row)return;
-  row.boleto=!row.boleto;
-  btn.textContent=row.boleto?'🔵':'⚪';
-  btn.classList.toggle('boleto-ativo',row.boleto);
-  tr.classList.toggle('boleto-row',row.boleto);
-}
-
-async function toggleRegistro(id){
-  const row=allPassagens.find(r=>r.id===id);
-  if(!row)return;
-  row.retroativo=!row.retroativo;
+  row.retroativo=(el.value==='retro');
   await sb.from('passagens').update({retroativo:row.retroativo}).eq('id',id);
   renderDBGrid();renderDashboard();
   showToast(row.retroativo?'↩️ Marcado como Retroativo':'📅 Marcado como Do mês');
 }
-function toggleRegistroPending(pid){
+function updateRegistroPending(el){
+  const pid=el.dataset.pid;
   const row=pendingRows.find(r=>r._pid===pid);
   if(!row)return;
-  row.retroativo=!row.retroativo;
+  row.retroativo=(el.value==='retro');
   renderDBGrid();
 }
 
