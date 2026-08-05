@@ -263,6 +263,12 @@ footer{margin-top:40px;font-size:12px;color:var(--ink3);text-align:center;paddin
 .boleto-btn{background:transparent;border:none;cursor:pointer;font-size:16px;padding:4px;border-radius:4px;transition:transform .15s;line-height:1}
 .boleto-btn:hover{transform:scale(1.2)}
 .boleto-btn.boleto-ativo{filter:drop-shadow(0 0 4px #4B9EE8)}
+.reg-badge{display:inline-flex;align-items:center;gap:4px;padding:4px 9px;border-radius:99px;font-size:10.5px;font-weight:500;cursor:pointer;transition:all .15s;white-space:nowrap}
+.reg-badge.reg-mes{background:rgba(75,158,232,.15);color:var(--renov)}
+.reg-badge.reg-mes:hover{background:rgba(75,158,232,.25)}
+.reg-badge.reg-retro{background:rgba(240,164,74,.15);color:var(--antec)}
+.reg-badge.reg-retro:hover{background:rgba(240,164,74,.25)}
+.db-table tr.retro-row td:first-child{box-shadow:inset 3px 0 0 var(--antec)}
 .excel-opt{padding:8px 14px;font-size:12px;color:var(--ink2);cursor:pointer;transition:background .15s;white-space:nowrap}
 .excel-opt:hover{background:var(--surface3);color:var(--ink)}
 .db-table tr.dup-link td{background:rgba(240,164,74,0.12)!important;border-left:3px solid #F0A44A;}
@@ -436,6 +442,12 @@ footer{margin-top:40px;font-size:12px;color:var(--ink3);text-align:center;paddin
     <button class="month-btn" id="segB2B" onclick="selectSeg('b2b')">B2B</button>
     <button class="month-btn" id="segGov" onclick="selectSeg('gov')">GOV</button>
   </div>
+  <div id="verFilter" style="display:none;margin-bottom:24px;align-items:center;gap:8px">
+    <span class="month-label">Ver:</span>
+    <button class="month-btn active" id="verGeral" onclick="selectVer('geral')">Geral</button>
+    <button class="month-btn" id="verMes" onclick="selectVer('mes')">Do Mês</button>
+    <button class="month-btn" id="verRetro" onclick="selectVer('retro')">Retroativo</button>
+  </div>
 
   <div class="kpi-row" style="grid-template-columns:repeat(6,1fr)">
     <div class="kpi"><div class="kpi-label">Total de passagens</div><div class="kpi-value" id="kpiPass">—</div><div class="kpi-sub" id="kpiPassSub">—</div></div>
@@ -462,7 +474,7 @@ footer{margin-top:40px;font-size:12px;color:var(--ink3);text-align:center;paddin
   <div class="bottom-row">
     <div class="card">
       <div class="card-title">Comparativo por tipo</div>
-      <div class="table-wrap"><table><thead><tr><th>Tipo</th><th>Passagens</th><th>Fechamentos</th><th>Taxa</th><th>Valor total</th><th>Ticket médio</th></tr></thead><tbody id="tableBody"></tbody></table></div>
+      <div class="table-wrap"><table><thead><tr><th>Tipo</th><th>Do mês</th><th>Retroativo</th><th>Total</th><th>Fechamentos</th><th>Taxa</th><th>Valor total</th><th>Ticket médio</th></tr></thead><tbody id="tableBody"></tbody></table></div>
     </div>
     <div class="card">
       <div class="card-title">Ticket médio por tipo</div>
@@ -661,6 +673,13 @@ footer{margin-top:40px;font-size:12px;color:var(--ink3);text-align:center;paddin
     <button class="btn-sm btn-del" onclick="deleteSelected()">✕ Remover</button>
     <button class="btn-sm btn-save-row" onclick="saveAllPending()">↑ Salvar tudo</button>
   </div>
+  <div class="db-toolbar" style="border-top:none;padding-top:0">
+    <span class="month-label" style="margin-left:2px">Ver:</span>
+    <button class="month-btn active" id="dbVerTodos" onclick="selectDbVer('todos')" style="padding:5px 14px;font-size:12px">Todos</button>
+    <button class="month-btn" id="dbVerMes" onclick="selectDbVer('mes')" style="padding:5px 14px;font-size:12px">Do Mês</button>
+    <button class="month-btn" id="dbVerRetro" onclick="selectDbVer('retro')" style="padding:5px 14px;font-size:12px">Retroativo</button>
+    <span class="paste-hint" style="margin-left:8px">💡 linhas coladas herdam o filtro ativo aqui</span>
+  </div>
   <div class="db-grid-wrap" id="dbGridWrap">
     <table class="db-table">
       <thead><tr>
@@ -675,6 +694,8 @@ footer{margin-top:40px;font-size:12px;color:var(--ink3);text-align:center;paddin
         <th style="min-width:110px">Módulos/Previsto</th>
         <th style="min-width:110px">Fechamento</th>
         <th style="min-width:88px">Vendedor</th>
+        <th style="min-width:60px">Boleto</th>
+        <th style="min-width:100px">Registro</th>
       </tr></thead>
       <tbody id="dbBody"></tbody>
     </table>
@@ -775,7 +796,7 @@ const TIPO_COR={Renovação:'#4B9EE8',Churn:'#E05A5A','Risco Churn':'#FF8C42',Up
 let currentUser=null, currentPerfil=null;
 let allPassagens=[];
 let pendingRows=[];
-let _mesAtivo=null,_segAtivo='geral',_dbMes='abril',_dbCS='gabriel',_dbSeg='b2b',_panelMainTab='dados';
+let _mesAtivo=null,_segAtivo='geral',_verAtivo='geral',_dbMes='abril',_dbCS='gabriel',_dbSeg='b2b',_dbVer='mes',_panelMainTab='dados';
 let realtimeSub=null;
 let chartPassagens,chartDonut,chartTicket,chartHistDonut,chartHistFech,chartRoiPct,chartRoiValor,chartRoiMes;
 
@@ -934,16 +955,29 @@ function initRealtime(){
     });
 }
 
-function getRows(mes,seg){
+function getRows(mes,seg,ver){
   return allPassagens.filter(r=>{
     if(r.mes!==mes)return false;
-    if(seg==='b2b')return r.seg==='b2b';
-    if(seg==='gov')return r.seg==='gov';
+    if(seg==='b2b'&&r.seg!=='b2b')return false;
+    if(seg==='gov'&&r.seg!=='gov')return false;
+    if(ver==='mes'&&r.retroativo)return false;
+    if(ver==='retro'&&!r.retroativo)return false;
     return true;
   });
 }
 
 function hasMesData(mes){return allPassagens.some(r=>r.mes===mes);}
+
+function aggregateSplit(rows){
+  const byTipo={};
+  rows.forEach(r=>{
+    const tipo=normTipo(r.tipo);
+    if(!byTipo[tipo])byTipo[tipo]={tipo,cor:corTipo(tipo),mesPass:0,retroPass:0};
+    if(r.retroativo)byTipo[tipo].retroPass++;else byTipo[tipo].mesPass++;
+  });
+  return Object.values(byTipo).filter(d=>d.mesPass+d.retroPass>0)
+    .sort((a,b)=>(b.mesPass+b.retroPass)-(a.mesPass+a.retroPass));
+}
 
 function aggregate(rows){
   const byTipo={};
@@ -989,10 +1023,13 @@ function buildMonthNav(){
 }
 
 function selectMonth(key){
-  _mesAtivo=key;_segAtivo='geral';
+  _mesAtivo=key;_segAtivo='geral';_verAtivo='geral';
   document.querySelectorAll('#segFilter .month-btn').forEach(b=>b.classList.remove('active'));
   document.getElementById('segGeral').classList.add('active');
   document.getElementById('segFilter').style.display='flex';
+  document.querySelectorAll('#verFilter .month-btn').forEach(b=>b.classList.remove('active'));
+  document.getElementById('verGeral').classList.add('active');
+  document.getElementById('verFilter').style.display='flex';
   buildMonthNav();renderDashboard();
 }
 
@@ -1004,11 +1041,23 @@ function selectSeg(seg){
   renderDashboard();
 }
 
+function selectVer(ver){
+  _verAtivo=ver;
+  document.querySelectorAll('#verFilter .month-btn').forEach(b=>b.classList.remove('active'));
+  const m={geral:'verGeral',mes:'verMes',retro:'verRetro'};
+  document.getElementById(m[ver]).classList.add('active');
+  renderDashboard();
+}
+
 function initCharts(){
   chartPassagens=new Chart(document.getElementById('chartPassagens'),{
-    type:'bar',data:{labels:[],datasets:[{data:[],backgroundColor:[],borderColor:[],borderWidth:1.5,borderRadius:6}]},
-    options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false},tooltip:{callbacks:{label:c=>c.parsed.y+' passagens'}}},
-      scales:{x:{grid:{display:false},ticks:{color:tickColor,font:tickFont}},y:{grid:{color:gridColor},ticks:{color:tickColor,font:tickFont}}}}
+    type:'bar',
+    data:{labels:[],datasets:[
+      {label:'Do mês',data:[],backgroundColor:[],borderRadius:6,stack:'s'},
+      {label:'Retroativo',data:[],backgroundColor:[],borderRadius:6,stack:'s'}
+    ]},
+    options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false},tooltip:{callbacks:{label:c=>c.dataset.label+': '+c.parsed.y+' passagens'}}},
+      scales:{x:{stacked:true,grid:{display:false},ticks:{color:tickColor,font:tickFont}},y:{stacked:true,grid:{color:gridColor},ticks:{color:tickColor,font:tickFont}}}}
   });
   chartDonut=new Chart(document.getElementById('chartDonut'),{
     type:'doughnut',data:{labels:[],datasets:[{data:[],backgroundColor:[],borderWidth:2,borderColor:'#161B26',hoverOffset:8}]},
@@ -1061,15 +1110,21 @@ function initCharts(){
 
 function renderDashboard(){
   if(!_mesAtivo)return;
-  const rows=getRows(_mesAtivo,_segAtivo);
+  const rows=getRows(_mesAtivo,_segAtivo,_verAtivo);
+  const allRows=_verAtivo==='geral'?rows:getRows(_mesAtivo,_segAtivo,'geral');
   const data=aggregate(rows);
+  const splitData=aggregateSplit(allRows);
+  const splitMap={};splitData.forEach(d=>splitMap[d.tipo]=d);
+  const passMesTotal=allRows.filter(r=>!r.retroativo).length;
+  const passRetroTotal=allRows.filter(r=>r.retroativo).length;
   if(!data.length){
     ['kpiPass','kpiVal','kpiTicket','kpiTaxa'].forEach(id=>document.getElementById(id).textContent='—');
     document.getElementById('kpiPassSub').textContent='Sem passagens neste filtro';
     document.getElementById('kpiValSub').textContent='';document.getElementById('kpiTaxaSub').textContent='';
-    document.getElementById('tableBody').innerHTML='<tr><td colspan="6" style="text-align:center;color:var(--ink3);padding:24px">Nenhuma passagem encontrada.</td></tr>';
+    document.getElementById('tableBody').innerHTML='<tr><td colspan="8" style="text-align:center;color:var(--ink3);padding:24px">Nenhuma passagem encontrada.</td></tr>';
     document.getElementById('donutCenter').textContent='—';document.getElementById('donutLegend').innerHTML='';document.getElementById('legendPass').innerHTML='';
-    [chartPassagens,chartDonut,chartTicket].forEach(c=>{c.data.labels=[];c.data.datasets[0].data=[];c.update();});
+    [chartDonut,chartTicket].forEach(c=>{c.data.labels=[];c.data.datasets[0].data=[];c.update();});
+    chartPassagens.data.labels=[];chartPassagens.data.datasets[0].data=[];chartPassagens.data.datasets[1].data=[];chartPassagens.update();
     document.getElementById('origemSection').style.display='none';return;
   }
   const totalPass=data.reduce((s,d)=>s+d.passagens,0),totalFech=data.reduce((s,d)=>s+d.fechamentos,0);
@@ -1090,7 +1145,9 @@ function renderDashboard(){
   // Card 6: Previsto vs Realizado
   document.getElementById('kpiPrevReal').textContent=prevRealPct+'%';
   document.getElementById('kpiPrevRealSub').textContent=fmt(totalVal)+' de '+fmt(totalPrevisto)+' previsto';
-  document.getElementById('kpiPassSub').textContent='em '+data.length+' tipos de campanha';
+  document.getElementById('kpiPassSub').textContent=_verAtivo==='geral'
+    ? 'em '+data.length+' tipos · '+passMesTotal+' do mês + '+passRetroTotal+' retroativas'
+    : 'em '+data.length+' tipos de campanha';
   document.getElementById('kpiVal').textContent=fmt(totalVal);
   document.getElementById('kpiValSub').textContent='em '+totalFech+' fechamentos';
   // kpiTicket removed from layout
@@ -1100,16 +1157,27 @@ function renderDashboard(){
   const tbody=document.getElementById('tableBody');tbody.innerHTML='';
   data.forEach(d=>{
     const t=d.passagens>0?Math.round(d.fechamentos/d.passagens*100):0;
+    const sp=splitMap[d.tipo]||{mesPass:0,retroPass:0};
     const tr=document.createElement('tr');
-    tr.innerHTML='<td><span class="tipo-badge"><span class="tipo-dot" style="background:'+d.cor+'"></span>'+d.tipo+'</span><div class="bar-bg"><div class="bar-fill" style="width:'+(d.passagens/maxPass*100)+'%;background:'+d.cor+';opacity:.4"></div></div></td><td>'+d.passagens+'</td><td>'+d.fechamentos+'</td><td>'+t+'%</td><td>'+fmt(d.valorTotal)+'</td><td>'+(d.fechamentos>0?fmt(d.ticketMedio):'—')+'</td>';
+    tr.innerHTML='<td><span class="tipo-badge"><span class="tipo-dot" style="background:'+d.cor+'"></span>'+d.tipo+'</span><div class="bar-bg"><div class="bar-fill" style="width:'+(d.passagens/maxPass*100)+'%;background:'+d.cor+';opacity:.4"></div></div></td>'
+      +'<td>'+sp.mesPass+'</td><td>'+(sp.retroPass>0?sp.retroPass:'—')+'</td><td>'+(sp.mesPass+sp.retroPass)+'</td>'
+      +'<td>'+d.fechamentos+'</td><td>'+t+'%</td><td>'+fmt(d.valorTotal)+'</td><td>'+(d.fechamentos>0?fmt(d.ticketMedio):'—')+'</td>';
     tbody.appendChild(tr);
   });
   document.getElementById('donutCenter').textContent=fmtK(totalVal);
   const pct=data.map(d=>totalVal>0?Math.round(d.valorTotal/totalVal*100):0);
   document.getElementById('donutLegend').innerHTML=data.map((d,i)=>'<span class="legend-item"><span class="legend-dot" style="background:'+d.cor+'"></span>'+d.tipo+' '+pct[i]+'%</span>').join('');
-  document.getElementById('legendPass').innerHTML=data.map(d=>'<span class="legend-item"><span class="legend-dot" style="background:'+d.cor+'"></span>'+d.tipo+'</span>').join('');
-  chartPassagens.data.labels=data.map(d=>d.tipo);chartPassagens.data.datasets[0].data=data.map(d=>d.passagens);
-  chartPassagens.data.datasets[0].backgroundColor=data.map(d=>d.cor+'55');chartPassagens.data.datasets[0].borderColor=data.map(d=>d.cor);chartPassagens.update();
+  document.getElementById('legendPass').innerHTML=splitData.map(d=>'<span class="legend-item"><span class="legend-dot" style="background:'+d.cor+'"></span>'+d.tipo+'</span>').join('')
+    +'<span class="legend-item" style="margin-left:10px"><span class="legend-dot" style="background:var(--ink2)"></span>Do mês (cor sólida)</span>'
+    +'<span class="legend-item"><span class="legend-dot" style="background:var(--ink2);opacity:.35"></span>Retroativo (cor translúcida)</span>';
+  chartPassagens.data.labels=splitData.map(d=>d.tipo);
+  chartPassagens.data.datasets[0].data=splitData.map(d=>d.mesPass);
+  chartPassagens.data.datasets[0].backgroundColor=splitData.map(d=>d.cor+'FF');
+  chartPassagens.data.datasets[1].data=splitData.map(d=>d.retroPass);
+  chartPassagens.data.datasets[1].backgroundColor=splitData.map(d=>d.cor+'55');
+  chartPassagens.data.datasets[0].hidden=(_verAtivo==='retro');
+  chartPassagens.data.datasets[1].hidden=(_verAtivo==='mes');
+  chartPassagens.update();
   chartDonut.data.labels=data.map(d=>d.tipo);
   chartDonut.data.datasets[0].data=data.map(d=>d.valorTotal);
   chartDonut.data.datasets[0].backgroundColor=data.map(d=>d.cor);
@@ -1167,6 +1235,14 @@ function switchDbSeg(seg){
 }
 function renderPanelContent(){if(_panelMainTab==='dados')renderDBGrid();else renderOrigensPanel();}
 
+function selectDbVer(v){
+  _dbVer=v;
+  document.querySelectorAll('#dbVerTodos,#dbVerMes,#dbVerRetro').forEach(b=>b.classList.remove('active'));
+  const m={todos:'dbVerTodos',mes:'dbVerMes',retro:'dbVerRetro'};
+  document.getElementById(m[v]).classList.add('active');
+  renderDBGrid();
+}
+
 function getDbRows(){
   return allPassagens.filter(r=>r.mes===_dbMes&&r.cs===_dbCS&&r.seg===_dbSeg);
 }
@@ -1180,6 +1256,8 @@ function renderDBGrid(){
   // Existing rows from Supabase
   let existingRows=allPassagens.filter(r=>r.mes===_dbMes&&r.cs===_dbCS&&r.seg===_dbSeg);
   if(_filtroFech) existingRows=existingRows.filter(r=>(r.comprou||'').toLowerCase()==='sim');
+  if(_dbVer==='mes') existingRows=existingRows.filter(r=>!r.retroativo);
+  if(_dbVer==='retro') existingRows=existingRows.filter(r=>r.retroativo);
   existingRows.forEach((row)=>{
     const tr=document.createElement('tr');
     tr.dataset.id=row.id||'';
@@ -1198,15 +1276,19 @@ function renderDBGrid(){
       +'<td style="text-align:center"><span class="modulo-previsto-badge" onclick="openModulos(\''+esc(row.id)+'\',null)">'+(row.valor_previsto>0?fmt(row.valor_previsto):'+ Módulos')+'</span></td>'
       +'<td><input class="cell-input" type="number" style="min-width:96px" value="'+fechVal+'" data-f="fechamento" data-id="'+esc(row.id)+'" onblur="updateRow(this)"></td>'
       +'<td><input class="cell-input" style="min-width:86px" value="'+esc(row.vendedor||'')+'" data-f="vendedor" data-id="'+esc(row.id)+'" onblur="updateRow(this)"></td>'
-      +'<td style="text-align:center"><button class="boleto-btn'+(row.boleto?'  boleto-ativo':'')+'" onclick="toggleBoleto(this,\''+esc(row.id)+'\')" title="'+(row.boleto?'Boleto gerado':'Marcar boleto gerado')+'">'+(row.boleto?'🔵':'⚪')+'</button></td>';
+      +'<td style="text-align:center"><button class="boleto-btn'+(row.boleto?'  boleto-ativo':'')+'" onclick="toggleBoleto(this,\''+esc(row.id)+'\')" title="'+(row.boleto?'Boleto gerado':'Marcar boleto gerado')+'">'+(row.boleto?'🔵':'⚪')+'</button></td>'
+      +'<td style="text-align:center"><span class="reg-badge '+(row.retroativo?'reg-retro':'reg-mes')+'" onclick="toggleRegistro(\''+esc(row.id)+'\')" title="Clique para alternar">'+(row.retroativo?'↩️ Retroativo':'📅 Do mês')+'</span></td>';
     tbody.appendChild(tr);
     if(row.boleto) tr.classList.add('boleto-row');
+    if(row.retroativo) tr.classList.add('retro-row');
   });
 
   // Pending (new) rows
   const pendingVisible=_filtroFech?pendingRows.filter(r=>r.mes===_dbMes&&r.cs===_dbCS&&r.seg===_dbSeg&&(r.comprou||'').toLowerCase()==='sim'):pendingRows;
   pendingVisible.forEach((row,pi)=>{
     if(row.mes!==_dbMes||row.cs!==_dbCS||row.seg!==_dbSeg)return;
+    if(_dbVer==='mes'&&row.retroativo)return;
+    if(_dbVer==='retro'&&!row.retroativo)return;
     const tr=document.createElement('tr');
     tr.classList.add('new-row');
     tr.dataset.pendingId=row._pid;
@@ -1223,8 +1305,10 @@ function renderDBGrid(){
       +'<td><input class="cell-input" type="number" style="min-width:96px" value="0" data-pid="'+row._pid+'" data-f="fechamento" oninput="updatePendingField(this)" onblur="updatePendingField(this)"></td>'
       +'<td style="text-align:center"><span class="modulo-previsto-badge" id="badge_'+row._pid+'" onclick="openModulos(null,\''+row._pid+'\')" >+ Módulos</span></td>'
       +'<td><input class="cell-input" style="min-width:86px" data-pid="'+row._pid+'" data-f="vendedor" onblur="updatePendingField(this)"></td>'
-      +'<td style="text-align:center"><button class="boleto-btn" onclick="toggleBoletoPending(this,\''+row._pid+'\')" title="Marcar boleto gerado">⚪</button></td>';
+      +'<td style="text-align:center"><button class="boleto-btn" onclick="toggleBoletoPending(this,\''+row._pid+'\')" title="Marcar boleto gerado">⚪</button></td>'
+      +'<td style="text-align:center"><span class="reg-badge '+(row.retroativo?'reg-retro':'reg-mes')+'" onclick="toggleRegistroPending(\''+row._pid+'\')" title="Clique para alternar">'+(row.retroativo?'↩️ Retroativo':'📅 Do mês')+'</span></td>';
     tbody.appendChild(tr);
+    if(row.retroativo) tr.classList.add('retro-row');
   });
 
   const total=allPassagens.filter(r=>r.mes===_dbMes).length+pendingRows.filter(r=>r.mes===_dbMes).length;
@@ -1284,7 +1368,7 @@ function updatePendingField(el){
 
 function addRow(){
   _pidCounter++;
-  pendingRows.push({_pid:'p'+_pidCounter,mes:_dbMes,cs:_dbCS,seg:_dbSeg,orig:'',data_envio:'',data_pag:'',tipo:'Renovação',link:'',comprou:'Não',fechamento:0,notas:'',vendedor:''});
+  pendingRows.push({_pid:'p'+_pidCounter,mes:_dbMes,cs:_dbCS,seg:_dbSeg,orig:'',data_envio:'',data_pag:'',tipo:'Renovação',link:'',comprou:'Não',fechamento:0,notas:'',vendedor:'',retroativo:_dbVer==='retro'});
   renderDBGrid();
   setTimeout(()=>{const w=document.getElementById('dbGridWrap');w.scrollTop=w.scrollHeight;},50);
 }
@@ -1350,19 +1434,20 @@ document.getElementById('dbGridWrap').addEventListener('paste',function(e){
   const text=(e.clipboardData||window.clipboardData).getData('text');
   if(!text.trim())return;
   const linhas=text.trim().split(/\r?\n/).filter(function(l){return l.trim();})
+  const retroPadrao=(_dbVer==='retro');
   const parsed=linhas.map(l=>{
     const cols=l.split('	'),get=i=>(cols[i]||'').trim();
     let row;
     if(cols.length>=10||(cols.length>=8&&!get(0).match(/\d{2}\/\d{2}|\d{4}/))){
-      row={mes:_dbMes,cs:_dbCS,seg:_dbSeg,orig:get(0),data_envio:pDate(get(1)),data_pag:pDate(get(2)),tipo:normTipo(get(3)),link:get(4),comprou:pComp(get(6)),fechamento:pFech(get(7)),vendedor:get(8)};
+      row={mes:_dbMes,cs:_dbCS,seg:_dbSeg,orig:get(0),data_envio:pDate(get(1)),data_pag:pDate(get(2)),tipo:normTipo(get(3)),link:get(4),comprou:pComp(get(6)),fechamento:pFech(get(7)),vendedor:get(8),retroativo:retroPadrao};
     }else{
-      row={mes:_dbMes,cs:_dbCS,seg:_dbSeg,orig:'',data_envio:pDate(get(0)),data_pag:'',tipo:normTipo(get(1)),link:get(2),comprou:pComp(get(4)),fechamento:pFech(get(5)),vendedor:get(6)};
+      row={mes:_dbMes,cs:_dbCS,seg:_dbSeg,orig:'',data_envio:pDate(get(0)),data_pag:'',tipo:normTipo(get(1)),link:get(2),comprou:pComp(get(4)),fechamento:pFech(get(5)),vendedor:get(6),retroativo:retroPadrao};
     }
     return row;
   }).filter(r=>r.link||r.vendedor);
   if(!parsed.length){showToast('Nenhuma linha válida');return;}
   pendingRows=[...pendingRows,...parsed];
-  renderDBGrid();showToast('✓ '+parsed.length+' linha(s) coladas — clique Salvar para confirmar');
+  renderDBGrid();showToast('✓ '+parsed.length+' linha(s) coladas ('+(retroPadrao?'↩️ Retroativo':'📅 Do mês')+') — clique Salvar para confirmar');
 });
 
 function pDate(v){if(!v)return'';const n=parseFloat(v);if(!isNaN(n)&&n>40000){const d=new Date((n-25569)*86400*1000);return d.toLocaleDateString('pt-BR');}return v;}
@@ -1573,12 +1658,14 @@ function switchView(view){
   const showMonthNav = view==='dashboard';
   document.getElementById('monthNav').style.display = showMonthNav ? 'flex' : 'none';
   document.getElementById('segFilter').style.display = showMonthNav && _mesAtivo ? 'flex' : 'none';
+  document.getElementById('verFilter').style.display = showMonthNav && _mesAtivo ? 'flex' : 'none';
   // Show/hide views
   document.getElementById('appScreen').querySelectorAll('.kpi-row,.charts-grid,.bottom-row,.origem-section').forEach(el=>{
     el.style.display = view==='dashboard' ? '' : 'none';
   });
   // Also hide month nav on non-dashboard views
   document.getElementById('segFilter').style.display = (view==='dashboard' && _mesAtivo) ? 'flex' : 'none';
+  document.getElementById('verFilter').style.display = (view==='dashboard' && _mesAtivo) ? 'flex' : 'none';
   document.getElementById('historicoView').style.display = view==='historico' ? 'block' : 'none';
   document.getElementById('gestaoView').style.display = view==='gestao' ? 'block' : 'none';
   document.getElementById('roiView').style.display = view==='roi' ? 'block' : 'none';
@@ -2010,6 +2097,21 @@ function toggleBoletoPending(btn, pid){
   btn.textContent=row.boleto?'🔵':'⚪';
   btn.classList.toggle('boleto-ativo',row.boleto);
   tr.classList.toggle('boleto-row',row.boleto);
+}
+
+async function toggleRegistro(id){
+  const row=allPassagens.find(r=>r.id===id);
+  if(!row)return;
+  row.retroativo=!row.retroativo;
+  await sb.from('passagens').update({retroativo:row.retroativo}).eq('id',id);
+  renderDBGrid();renderDashboard();
+  showToast(row.retroativo?'↩️ Marcado como Retroativo':'📅 Marcado como Do mês');
+}
+function toggleRegistroPending(pid){
+  const row=pendingRows.find(r=>r._pid===pid);
+  if(!row)return;
+  row.retroativo=!row.retroativo;
+  renderDBGrid();
 }
 
 // ── DUPLICATE LINK CHECK
