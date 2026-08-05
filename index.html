@@ -84,6 +84,7 @@ body.panel-open #appScreen{padding-right:calc(var(--panel-w) + 32px)}
 .kpi-label{font-size:11px;font-weight:500;text-transform:uppercase;letter-spacing:.08em;color:var(--ink3);margin-bottom:8px}
 .kpi-value{font-family:'DM Serif Display',serif;font-size:32px;font-weight:400;color:var(--ink);line-height:1}
 .kpi-sub{font-size:11px;color:var(--ink3);margin-top:6px}
+.kpi-row .kpi-sub{display:none}
 
 .charts-grid{display:grid;grid-template-columns:1fr 1fr;gap:20px;margin-bottom:20px}
 .card{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:24px}
@@ -238,6 +239,12 @@ footer{margin-top:40px;font-size:12px;color:var(--ink3);text-align:center;paddin
 .seg-tab.active{background:var(--surface3);border-color:var(--border2);color:var(--ink2)}
 .db-toolbar{padding:10px 24px;display:flex;align-items:center;gap:8px;flex-shrink:0;border-bottom:1px solid var(--border)}
 .db-toolbar-info{font-size:11px;color:var(--ink3);flex:1}
+.db-search-wrap{position:relative;display:inline-flex;align-items:center}
+.db-search{background:var(--surface2);border:1px solid var(--border2);border-radius:8px;padding:7px 28px 7px 12px;color:var(--ink);font-family:'DM Sans',sans-serif;font-size:12px;width:220px;outline:none;transition:border-color .15s}
+.db-search:focus{border-color:var(--renov)}
+.db-search::placeholder{color:var(--ink3)}
+.db-search-clear{position:absolute;right:6px;background:transparent;border:none;color:var(--ink3);cursor:pointer;font-size:12px;padding:2px 5px;border-radius:4px;line-height:1}
+.db-search-clear:hover{color:var(--ink);background:var(--surface3)}
 .btn-sm{padding:6px 12px;border-radius:6px;font-family:'DM Sans',sans-serif;font-size:12px;cursor:pointer;transition:all .15s;display:inline-flex;align-items:center;gap:4px;white-space:nowrap;border:none}
 .btn-add{background:var(--renov);color:#fff;font-weight:500}.btn-add:hover{opacity:.85}
 .btn-del{border:1px solid rgba(224,90,90,.3)!important;background:transparent;color:var(--churn)}.btn-del:hover{background:rgba(224,90,90,.1)}
@@ -487,6 +494,11 @@ footer{margin-top:40px;font-size:12px;color:var(--ink3);text-align:center;paddin
     <div class="origem-grid" id="origemGrid"></div>
   </div>
 
+  <div class="card origem-section" id="modulosSection" style="display:none">
+    <div class="card-title">Módulos mais vendidos (previstos)</div>
+    <div class="origem-grid" id="modulosGrid"></div>
+  </div>
+
   <!-- HISTÓRICO VIEW -->
 <div id="historicoView">
   <div class="hist-summary">
@@ -631,6 +643,10 @@ footer{margin-top:40px;font-size:12px;color:var(--ink3);text-align:center;paddin
   </div>
   <div class="db-toolbar">
     <span class="db-toolbar-info" id="dbInfo">—</span>
+    <div class="db-search-wrap">
+      <input type="text" class="db-search" id="dbSearch" placeholder="🔍 Buscar link, vendedor, origem..." oninput="renderDBGrid()">
+      <button class="db-search-clear" id="dbSearchClear" onclick="clearDbSearch()" style="display:none" title="Limpar busca">✕</button>
+    </div>
     <button class="btn-sm" id="btnFiltroFech" onclick="toggleFiltroFech()" style="border:1px solid var(--border2);background:transparent;color:var(--ink2)">⚡ Só fechados</button>
     <div style="position:relative;display:inline-block" id="excelMenuWrap">
       <button class="btn-sm" onclick="toggleExcelMenu()" style="border:1px solid var(--border2);background:transparent;color:var(--ink2)">📥 Excel ▾</button>
@@ -1009,6 +1025,25 @@ function aggregateByOrig(rows){
     .map(d=>Object.assign({},d,{taxa:d.passagens>0?Math.round(d.fechamentos/d.passagens*100):0,ticket:d.fechamentos>0?d.valorTotal/d.fechamentos:0}));
 }
 
+function aggregateModulos(rows){
+  const byMod={};
+  rows.forEach(r=>{
+    if(!r.modulos_ids)return;
+    let arr;
+    try{arr=JSON.parse(r.modulos_ids)||[];}catch(e){arr=[];}
+    arr.forEach(m=>{
+      if(!m||!m.id)return;
+      const info=MODULOS.find(x=>x.id===m.id);
+      const qty=Number(m.qty)||0;
+      if(qty<=0)return;
+      if(!byMod[m.id])byMod[m.id]={id:m.id,nome:info?info.nome:m.id,preco:info?info.preco:0,qty:0,passagens:0};
+      byMod[m.id].qty+=qty;
+      byMod[m.id].passagens++;
+    });
+  });
+  return Object.values(byMod).map(d=>Object.assign({},d,{valor:d.qty*d.preco})).sort((a,b)=>b.qty-a.qty);
+}
+
 // ── DASHBOARD
 function buildMonthNav(){
   const nav=document.getElementById('monthNav');nav.innerHTML='<span class="month-label">Mês:</span>';
@@ -1125,7 +1160,8 @@ function renderDashboard(){
     document.getElementById('donutCenter').textContent='—';document.getElementById('donutLegend').innerHTML='';document.getElementById('legendPass').innerHTML='';
     [chartDonut,chartTicket].forEach(c=>{c.data.labels=[];c.data.datasets[0].data=[];c.update();});
     chartPassagens.data.labels=[];chartPassagens.data.datasets[0].data=[];chartPassagens.data.datasets[1].data=[];chartPassagens.update();
-    document.getElementById('origemSection').style.display='none';return;
+    document.getElementById('origemSection').style.display='none';
+    document.getElementById('modulosSection').style.display='none';return;
   }
   const totalPass=data.reduce((s,d)=>s+d.passagens,0),totalFech=data.reduce((s,d)=>s+d.fechamentos,0);
   const totalVal=data.reduce((s,d)=>s+d.valorTotal,0),ticketG=totalFech>0?totalVal/totalFech:0;
@@ -1188,9 +1224,20 @@ function renderDashboard(){
   chartTicket.data.datasets[0].backgroundColor=td.map(d=>d.cor+'55');chartTicket.data.datasets[0].borderColor=td.map(d=>d.cor);chartTicket.update();
   const origs=aggregateByOrig(rows).filter(o=>o.orig!=='Não informado');
   const sec=document.getElementById('origemSection');
-  if(!origs.length){sec.style.display='none';return;}
-  sec.style.display='block';
-  document.getElementById('origemGrid').innerHTML=origs.map(o=>'<div class="orig-card"><div class="orig-card-name">'+o.orig+'</div><div class="orig-card-taxa">'+o.taxa+'%</div><div class="orig-card-sub">'+o.fechamentos+' de '+o.passagens+' passagens</div><div class="orig-card-val">'+fmt(o.valorTotal)+'</div></div>').join('');
+  if(!origs.length){
+    sec.style.display='none';
+  }else{
+    sec.style.display='block';
+    document.getElementById('origemGrid').innerHTML=origs.map(o=>'<div class="orig-card"><div class="orig-card-name">'+o.orig+'</div><div class="orig-card-taxa">'+o.taxa+'%</div><div class="orig-card-sub">'+o.fechamentos+' de '+o.passagens+' passagens</div><div class="orig-card-val">'+fmt(o.valorTotal)+'</div></div>').join('');
+  }
+  const mods=aggregateModulos(rows).slice(0,8);
+  const modSec=document.getElementById('modulosSection');
+  if(!mods.length){
+    modSec.style.display='none';
+  }else{
+    modSec.style.display='block';
+    document.getElementById('modulosGrid').innerHTML=mods.map(m=>'<div class="orig-card"><div class="orig-card-name">'+m.nome+'</div><div class="orig-card-taxa">'+m.qty+'</div><div class="orig-card-sub">'+m.passagens+' passagens · '+fmt(m.preco)+'/un</div><div class="orig-card-val">'+fmt(m.valor)+'</div></div>').join('');
+  }
 }
 
 // ── PAINEL DB
@@ -1243,6 +1290,11 @@ function selectDbVer(v){
   renderDBGrid();
 }
 
+function clearDbSearch(){
+  document.getElementById('dbSearch').value='';
+  renderDBGrid();
+}
+
 function getDbRows(){
   return allPassagens.filter(r=>r.mes===_dbMes&&r.cs===_dbCS&&r.seg===_dbSeg);
 }
@@ -1253,11 +1305,19 @@ function renderDBGrid(){
   const tbody=document.getElementById('dbBody');
   tbody.innerHTML='';
 
+  const searchTerm=(document.getElementById('dbSearch').value||'').trim().toLowerCase();
+  document.getElementById('dbSearchClear').style.display=searchTerm?'inline-flex':'none';
+  const matchSearch=r=>{
+    if(!searchTerm)return true;
+    return [r.link,r.vendedor,r.orig,r.notas,r.tipo].some(v=>(v||'').toString().toLowerCase().includes(searchTerm));
+  };
+
   // Existing rows from Supabase
   let existingRows=allPassagens.filter(r=>r.mes===_dbMes&&r.cs===_dbCS&&r.seg===_dbSeg);
   if(_filtroFech) existingRows=existingRows.filter(r=>(r.comprou||'').toLowerCase()==='sim');
   if(_dbVer==='mes') existingRows=existingRows.filter(r=>!r.retroativo);
   if(_dbVer==='retro') existingRows=existingRows.filter(r=>r.retroativo);
+  existingRows=existingRows.filter(matchSearch);
   existingRows.forEach((row)=>{
     const tr=document.createElement('tr');
     tr.dataset.id=row.id||'';
@@ -1289,6 +1349,7 @@ function renderDBGrid(){
     if(row.mes!==_dbMes||row.cs!==_dbCS||row.seg!==_dbSeg)return;
     if(_dbVer==='mes'&&row.retroativo)return;
     if(_dbVer==='retro'&&!row.retroativo)return;
+    if(!matchSearch(row))return;
     const tr=document.createElement('tr');
     tr.classList.add('new-row');
     tr.dataset.pendingId=row._pid;
